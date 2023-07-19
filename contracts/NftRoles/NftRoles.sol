@@ -75,4 +75,8 @@ contract NftRoles is INftRoles {
         RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
         return (_roleData.expirationDate);
     }
+
+    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
+        return interfaceId == type(INftRoles).interfaceId;
+    }
 }

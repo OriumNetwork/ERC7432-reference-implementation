@@ -2,8 +2,11 @@
 
 pragma solidity 0.8.9;
 
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+
 /// @notice The Nft Roles interface enables granting and revoking temporary roles for tokens.
-interface INftRoles {
+interface INftRoles is IERC165 {
     struct RoleData {
         uint64 expirationDate;
         bytes data;

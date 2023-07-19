@@ -4,6 +4,8 @@ pragma solidity 0.8.9;
 
 import { NftRoles } from "../NftRoles/NftRoles.sol";
 import { INftRolesMetadata } from "./interfaces/INftRolesMetadata.sol";
+import { INftRoles } from "../NftRoles/interfaces/INftRoles.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract NftRolesMetadata is NftRoles, INftRolesMetadata {
     // role => struct(name, description, metadata)
@@ -29,5 +31,9 @@ contract NftRolesMetadata is NftRoles, INftRolesMetadata {
 
     function roleMetadata(bytes32 _role) external view override returns (bytes memory) {
         return _roleMetadata[_role].data;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external view virtual override(NftRoles, IERC165) returns (bool) {
+        return interfaceId == type(INftRoles).interfaceId || interfaceId == type(INftRolesMetadata).interfaceId;
     }
 }
