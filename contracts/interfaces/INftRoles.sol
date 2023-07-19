@@ -2,8 +2,12 @@
 
 pragma solidity 0.8.9;
 
-/// @notice The Roles Registry interface enables granting and revoking temporary roles for tokens.
-interface IRolesRegistry {
+/// @notice The Nft Roles interface enables granting and revoking temporary roles for tokens.
+interface INftRoles {
+    struct RoleData {
+        uint64 expirationDate;
+        bytes data;
+    }
 
     /// @notice Emitted when a role is assigned to a user.
     /// @param _role The role identifier.
@@ -15,7 +19,7 @@ interface IRolesRegistry {
     event RoleGranted(
         bytes32 _role,
         address _grantee,
-        uint64  _expirationDate,
+        uint64 _expirationDate,
         address indexed _tokenAddress,
         uint256 indexed _tokenId,
         bytes _data
@@ -26,12 +30,7 @@ interface IRolesRegistry {
     /// @param _grantee The user that receives the role revocation.
     /// @param _tokenAddress The token address.
     /// @param _tokenId The token identifier.
-    event RoleRevoked(
-        bytes32 _role,
-        address _grantee,
-        address indexed _tokenAddress,
-        uint256 indexed _tokenId
-    );
+    event RoleRevoked(bytes32 _role, address _grantee, address indexed _tokenAddress, uint256 indexed _tokenId);
 
     /// @notice Grants a role to a user.
     /// @param _role The role identifier.
@@ -54,12 +53,7 @@ interface IRolesRegistry {
     /// @param _grantee The user that receives the role revocation.
     /// @param _tokenAddress The token address.
     /// @param _tokenId The token identifier.
-    function revokeRole(
-        bytes32 _role,
-        address _grantee,
-        address _tokenAddress,
-        uint256 _tokenId
-    ) external;
+    function revokeRole(bytes32 _role, address _grantee, address _tokenAddress, uint256 _tokenId) external;
 
     /// @notice Checks if a user has a role.
     /// @param _role The role identifier.
@@ -90,5 +84,4 @@ interface IRolesRegistry {
         address _tokenAddress,
         uint256 _tokenId
     ) external view returns (uint64 expirationDate_, bytes memory data_);
-
 }
