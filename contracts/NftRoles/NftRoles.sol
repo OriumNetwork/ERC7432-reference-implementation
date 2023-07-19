@@ -60,8 +60,19 @@ contract NftRoles is INftRoles {
         address _grantee,
         address _tokenAddress,
         uint256 _tokenId
-    ) external view returns (uint64 expirationDate_, bytes memory data_) {
+    ) external view returns (bytes memory data_) {
         RoleData memory _roleData = roleAssignments[_granter][_grantee][_tokenAddress][_tokenId][_role];
-        return (_roleData.expirationDate, _roleData.data);
+        return (_roleData.data);
+    }
+
+     function roleExpirationDate(
+        bytes32 _role,
+        address _grantor,
+        address _grantee,
+        address _tokenAddress,
+        uint256 _tokenId
+    ) external view returns (uint64 expirationDate_){
+        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
+        return (_roleData.expirationDate);
     }
 }

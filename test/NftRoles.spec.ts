@@ -198,8 +198,10 @@ describe('Nfts Roles', () => {
           .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
 
         const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
+        expect(returnedData).to.equal(customData)
 
-        expect(returnedData.data_).to.equal(customData)
+        const returnedExpirationDate = await nftRoles.roleExpirationDate(role, roleCreator.address, userOne.address, AddressZero, tokenId)
+        expect(returnedExpirationDate).to.equal(expirationDate)
       })
     })
   })
