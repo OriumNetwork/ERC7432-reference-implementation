@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.9;
 
-import { NftRoles } from "./NftRoles.sol";
+import { NftRoles } from "../NftRoles/NftRoles.sol";
 import { INftRolesMetadata } from "./interfaces/INftRolesMetadata.sol";
 
 contract NftRolesMetadata is NftRoles, INftRolesMetadata {

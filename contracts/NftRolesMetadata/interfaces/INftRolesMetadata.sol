@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.9;
 
-import { INftRoles } from "./INftRoles.sol";
+import { INftRoles } from "../../NftRoles/interfaces/INftRoles.sol";
 
 /// @notice The Nfts Roles Metadata interface enables querying metadata about the Nft Roles contract.
 interface INftRolesMetadata is INftRoles {
