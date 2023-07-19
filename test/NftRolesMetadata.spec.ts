@@ -16,7 +16,7 @@ describe('Nfts Roles Metadata', () => {
   const role = randomHash()
   const name = 'role name'
   const description = 'role description'
-  const metadata = randomHash()
+  const data = randomHash()
 
   before(async function () {
     // prettier-ignore
@@ -31,15 +31,15 @@ describe('Nfts Roles Metadata', () => {
   describe('Nft Roles', async () => {
     describe('Set role metadata', async () => {
       it('should set role metadata', async () => {
-        await expect(nftRolesMetadata.setRoleMetadata(role, name, description, metadata))
-          .to.emit(nftRolesMetadata, 'RoleMetadataSet')
-          .withArgs(role, name, description, metadata)
+        await expect(nftRolesMetadata.setRole(role, name, description, data))
+          .to.emit(nftRolesMetadata, 'RoleMetadata')
+          .withArgs(role, name, description, data)
       })
     })
 
     describe('Get role metadata', async () => {
       beforeEach(async () => {
-        await nftRolesMetadata.setRoleMetadata(role, name, description, metadata)
+        await nftRolesMetadata.setRole(role, name, description, data)
       })
       it('should get role name', async () => {
         expect(await nftRolesMetadata.roleName(role)).to.equal(name)
@@ -48,7 +48,7 @@ describe('Nfts Roles Metadata', () => {
         expect(await nftRolesMetadata.roleDescription(role)).to.equal(description)
       })
       it('should get role metadata', async () => {
-        expect(await nftRolesMetadata.roleMetadata(role)).to.equal(metadata)
+        expect(await nftRolesMetadata.roleMetadata(role)).to.equal(data)
       })
     })
   })
