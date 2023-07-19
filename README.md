@@ -1,3 +1,16 @@
-# Orium Rental Protocol
+# Nft Roles
 
-Orium Protocol for renting NFTs.
+Contains a minimal implementation of the NFT Roles standard.
+
+# Build
+
+```bash
+npm install
+npm run build
+```
+
+# Test
+
+```bash
+npm run test
+```

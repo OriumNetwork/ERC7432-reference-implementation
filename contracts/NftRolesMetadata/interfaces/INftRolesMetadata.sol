@@ -5,25 +5,25 @@ import { INftRoles } from "../../NftRoles/interfaces/INftRoles.sol";
 
 /// @notice The Nfts Roles Metadata interface enables querying metadata about the Nft Roles contract.
 interface INftRolesMetadata is INftRoles {
-    struct RoleMetadata {
+    struct Metadata {
         string name;
         string description;
-        bytes metadata;
+        bytes data;
     }
 
-    event RoleMetadataSet(bytes32 indexed role, string name, string description, bytes metadata);
+    /// @notice Emitted when the metadata of a role is set.
+    /// @param role The role identifier.
+    /// @param name The name of the role.
+    /// @param description The description of the role.
+    /// @param data The metadata of the role.
+    event RoleMetadata(bytes32 indexed role, string name, string description, bytes data);
 
     /// @notice Sets the metadata of a role.
     /// @param _role The role identifier.
     /// @param _name The name of the role.
     /// @param _description The description of the role.
-    /// @param _metadata The metadata of the role.
-    function setRoleMetadata(
-        bytes32 _role,
-        string calldata _name,
-        string calldata _description,
-        bytes calldata _metadata
-    ) external;
+    /// @param _data The data of the role.
+    function setRole(bytes32 _role, string calldata _name, string calldata _description, bytes calldata _data) external;
 
     /// @notice Returns the name of the role.
     /// @param _role The role to query.
