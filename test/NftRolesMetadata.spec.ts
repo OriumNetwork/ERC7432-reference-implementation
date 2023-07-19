@@ -3,7 +3,7 @@ import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { randomHash } from './utils'
-import { NftRolesInterfaceId, INftRolesMetadataInterfaceId } from './contants'
+import { NftRolesInterfaceId, NftRolesMetadataInterfaceId } from './contants'
 
 describe('Nfts Roles Metadata', () => {
   let nftRolesMetadata: Contract
@@ -54,8 +54,8 @@ describe('Nfts Roles Metadata', () => {
       it(`should return true for INftRoles interface id (${NftRolesInterfaceId})`, async function (){
         expect(await nftRolesMetadata.supportsInterface(NftRolesInterfaceId)).to.be.true
       })
-      it(`should return true for INftRolesMetadata interface id (${INftRolesMetadataInterfaceId})`, async function (){
-        expect(await nftRolesMetadata.supportsInterface(INftRolesMetadataInterfaceId)).to.be.true
+      it(`should return true for INftRolesMetadata interface id (${NftRolesMetadataInterfaceId})`, async function (){
+        expect(await nftRolesMetadata.supportsInterface(NftRolesMetadataInterfaceId)).to.be.true
       })
     })
   })
