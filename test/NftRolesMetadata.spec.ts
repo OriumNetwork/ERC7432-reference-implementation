@@ -31,7 +31,9 @@ describe('Nfts Roles Metadata', () => {
   describe('Nft Roles', async () => {
     describe('Set role metadata', async () => {
       it('should set role metadata', async () => {
-        await expect(nftRolesMetadata.setRoleMetadata(role, name, description, metadata)).to.not.be.reverted
+        await expect(nftRolesMetadata.setRoleMetadata(role, name, description, metadata))
+          .to.emit(nftRolesMetadata, 'RoleMetadataSet')
+          .withArgs(role, name, description, metadata)
       })
     })
 

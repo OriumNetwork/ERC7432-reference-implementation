@@ -45,7 +45,7 @@ describe('Nfts Roles', () => {
           nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, data),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, userOne.address, expirationDate, AddressZero, tokenId, data)
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, data)
       })
       it('should NOT grant role if expiration date is in the past', async () => {
         const blockNumber = await hre.ethers.provider.getBlockNumber()
@@ -64,7 +64,7 @@ describe('Nfts Roles', () => {
       it('should revoke role', async () => {
         await expect(nftRoles.connect(roleCreator).revokeRole(role, userOne.address, AddressZero, tokenId))
           .to.emit(nftRoles, 'RoleRevoked')
-          .withArgs(role, userOne.address, AddressZero, tokenId)
+          .withArgs(role, AddressZero, tokenId, userOne.address)
       })
     })
 
@@ -76,7 +76,7 @@ describe('Nfts Roles', () => {
             .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, userOne.address, expirationDate, AddressZero, tokenId, HashZero)
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
 
         await expect(
           nftRoles
@@ -84,7 +84,7 @@ describe('Nfts Roles', () => {
             .grantRole(role, userTwo.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, userTwo.address, expirationDate, AddressZero, tokenId, HashZero)
+          .withArgs(role, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
       })
 
       describe('Single User Roles', async () => {
@@ -195,7 +195,7 @@ describe('Nfts Roles', () => {
             .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, userOne.address, expirationDate, AddressZero, tokenId, customData)
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
 
         const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
 
