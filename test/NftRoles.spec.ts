@@ -3,7 +3,7 @@ import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { randomHash } from './utils'
-import { INftRolesInterfaceId, INftRolesMetadataInterfaceId } from './contants'
+import { NftRolesInterfaceId, INftRolesMetadataInterfaceId } from './contants'
 
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
@@ -207,10 +207,10 @@ describe('Nfts Roles', () => {
     })
 
     describe('ERC165', async function(){
-      it("should return true for INftRoles interface id (0x688fce16)", async function (){
-        expect(await nftRoles.supportsInterface(INftRolesInterfaceId)).to.be.true
+      it(`should return true for INftRoles interface id (${NftRolesInterfaceId})`, async function (){
+        expect(await nftRoles.supportsInterface(NftRolesInterfaceId)).to.be.true
       })
-      it("should return false for INftRolesMetadata interface id (0x953b1304)", async function (){
+      it(`should return true for INftRolesMetadata interface id (${INftRolesMetadataInterfaceId})`, async function (){
         expect(await nftRoles.supportsInterface(INftRolesMetadataInterfaceId)).to.be.false
       })
     })
