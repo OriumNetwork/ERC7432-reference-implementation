@@ -3,9 +3,8 @@
 pragma solidity 0.8.9;
 
 import { INftRoles } from "./interfaces/INftRoles.sol";
-import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract NftRoles is ERC165, INftRoles {
+contract NftRoles is INftRoles {
     // owner => user => tokenAddress => tokenId => role => struct(expirationDate, data)
     mapping(address => mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => RoleData)))))
         public roleAssignments;
@@ -77,7 +76,7 @@ contract NftRoles is ERC165, INftRoles {
         return (_roleData.expirationDate);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
         return interfaceId == type(INftRoles).interfaceId;
     }
 }
