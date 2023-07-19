@@ -1,11 +1,8 @@
-import hre, { ethers } from 'hardhat'
+import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { randomHash } from './utils'
-
-const { HashZero, AddressZero } = ethers.constants
-const ONE_DAY = 60 * 60 * 24
 
 describe('Nfts Roles Metadata', () => {
   let nftRolesMetadata: Contract
