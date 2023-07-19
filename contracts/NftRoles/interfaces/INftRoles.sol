@@ -11,26 +11,26 @@ interface INftRoles {
 
     /// @notice Emitted when a role is assigned to a user.
     /// @param _role The role identifier.
-    /// @param _grantee The user that receives the role assignment.
-    /// @param _expirationDate The expiration date of the role assignment.
     /// @param _tokenAddress The token address.
     /// @param _tokenId The token identifier.
+    /// @param _grantee The user that receives the role assignment.
+    /// @param _expirationDate The expiration date of the role assignment.
     /// @param _data Any additional data about the role assignment.
     event RoleGranted(
-        bytes32 _role,
-        address _grantee,
-        uint64 _expirationDate,
+        bytes32 indexed _role,
         address indexed _tokenAddress,
         uint256 indexed _tokenId,
+        address _grantee,
+        uint64 _expirationDate,
         bytes _data
     );
 
     /// @notice Revokes a role from a user.
     /// @param _role The role identifier.
-    /// @param _grantee The user that receives the role revocation.
     /// @param _tokenAddress The token address.
     /// @param _tokenId The token identifier.
-    event RoleRevoked(bytes32 _role, address _grantee, address indexed _tokenAddress, uint256 indexed _tokenId);
+    /// @param _grantee The user that receives the role revocation.
+    event RoleRevoked(bytes32 indexed _role, address indexed _tokenAddress, uint256 indexed _tokenId, address _grantee);
 
     /// @notice Grants a role to a user.
     /// @param _role The role identifier.

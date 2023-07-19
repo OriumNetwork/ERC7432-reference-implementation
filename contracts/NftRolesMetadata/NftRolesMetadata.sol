@@ -6,12 +6,6 @@ import { NftRoles } from "../NftRoles/NftRoles.sol";
 import { INftRolesMetadata } from "./interfaces/INftRolesMetadata.sol";
 
 contract NftRolesMetadata is NftRoles, INftRolesMetadata {
-    struct RoleMetadata {
-        string name;
-        string description;
-        bytes metadata;
-    }
-
     // role => struct(name, description, metadata)
     mapping(bytes32 => RoleMetadata) public _roleMetadata;
 
@@ -20,8 +14,9 @@ contract NftRolesMetadata is NftRoles, INftRolesMetadata {
         string calldata _name,
         string calldata _description,
         bytes calldata _metadata
-    ) external {
+    ) external override {
         _roleMetadata[_role] = RoleMetadata(_name, _description, _metadata);
+        emit RoleMetadataSet(_role, _name, _description, _metadata);
     }
 
     function roleName(bytes32 _role) external view override returns (string memory) {

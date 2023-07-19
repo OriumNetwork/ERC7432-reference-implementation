@@ -27,13 +27,13 @@ contract NftRoles is INftRoles {
     ) external validExpirationDate(_expirationDate) {
         roleAssignments[msg.sender][_grantee][_tokenAddress][_tokenId][_role] = RoleData(_expirationDate, _data);
         lastRoleAssignment[msg.sender][_tokenAddress][_tokenId][_role] = _grantee;
-        emit RoleGranted(_role, _grantee, _expirationDate, _tokenAddress, _tokenId, _data);
+        emit RoleGranted(_role, _tokenAddress, _tokenId, _grantee, _expirationDate, _data);
     }
 
     function revokeRole(bytes32 _role, address _grantee, address _tokenAddress, uint256 _tokenId) external {
         delete roleAssignments[msg.sender][_grantee][_tokenAddress][_tokenId][_role];
         delete lastRoleAssignment[msg.sender][_tokenAddress][_tokenId][_role];
-        emit RoleRevoked(_role, _grantee, _tokenAddress, _tokenId);
+        emit RoleRevoked(_role, _tokenAddress, _tokenId, _grantee);
     }
 
     function hasRole(
