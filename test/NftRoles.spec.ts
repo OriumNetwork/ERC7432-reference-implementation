@@ -3,6 +3,7 @@ import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { randomHash } from './utils'
+import { INftRolesInterfaceId, INftRolesMetadataInterfaceId } from './contants'
 
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
@@ -202,6 +203,15 @@ describe('Nfts Roles', () => {
 
         const returnedExpirationDate = await nftRoles.roleExpirationDate(role, roleCreator.address, userOne.address, AddressZero, tokenId)
         expect(returnedExpirationDate).to.equal(expirationDate)
+      })
+    })
+
+    describe('ERC165', async function(){
+      it("should return true for INftRoles interface id (0x688fce16)", async function (){
+        expect(await nftRoles.supportsInterface(INftRolesInterfaceId)).to.be.true
+      })
+      it("should return false for INftRolesMetadata interface id (0x953b1304)", async function (){
+        expect(await nftRoles.supportsInterface(INftRolesMetadataInterfaceId)).to.be.false
       })
     })
   })
