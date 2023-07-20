@@ -15,10 +15,11 @@ contract NftRolesMetadata is NftRoles, INftRolesMetadata {
         bytes32 _role,
         string calldata _name,
         string calldata _description,
+        bool _supportsMultipleAssignments,
         bytes calldata _data
     ) external override {
-        _roleMetadata[_role] = Metadata(_name, _description, _data);
-        emit RoleMetadata(_role, _name, _description, _data);
+        _roleMetadata[_role] = Metadata(_name, _description, _supportsMultipleAssignments, _data);
+        emit RoleMetadata(_role, _name, _description, _supportsMultipleAssignments, _data);
     }
 
     function roleName(bytes32 _role) external view override returns (string memory) {
@@ -31,6 +32,10 @@ contract NftRolesMetadata is NftRoles, INftRolesMetadata {
 
     function roleMetadata(bytes32 _role) external view override returns (bytes memory) {
         return _roleMetadata[_role].data;
+    }
+
+    function roleSupportsMultipleAssignments(bytes32 _role) external view override returns (bool) {
+        return _roleMetadata[_role].supportsMultipleAssignments;
     }
 
     function supportsInterface(bytes4 interfaceId) external view virtual override(NftRoles, IERC165) returns (bool) {
