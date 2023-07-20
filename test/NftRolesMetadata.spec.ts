@@ -14,6 +14,7 @@ describe('Nfts Roles Metadata', () => {
   const role = randomHash()
   const name = 'role name'
   const description = 'role description'
+  const supportMultipleAssignments = true
   const data = randomHash()
 
   before(async function () {
@@ -29,15 +30,15 @@ describe('Nfts Roles Metadata', () => {
   describe('Nft Roles', async () => {
     describe('Set role metadata', async () => {
       it('should set role metadata', async () => {
-        await expect(nftRolesMetadata.setRole(role, name, description, data))
+        await expect(nftRolesMetadata.setRole(role, name, description, supportMultipleAssignments, data))
           .to.emit(nftRolesMetadata, 'RoleMetadata')
-          .withArgs(role, name, description, data)
+          .withArgs(role, name, description, supportMultipleAssignments, data)
       })
     })
 
     describe('Get role metadata', async () => {
       beforeEach(async () => {
-        await nftRolesMetadata.setRole(role, name, description, data)
+        await nftRolesMetadata.setRole(role, name, description, supportMultipleAssignments, data)
       })
       it('should get role name', async () => {
         expect(await nftRolesMetadata.roleName(role)).to.equal(name)
@@ -47,6 +48,9 @@ describe('Nfts Roles Metadata', () => {
       })
       it('should get role metadata', async () => {
         expect(await nftRolesMetadata.roleMetadata(role)).to.equal(data)
+      })
+      it("should get role supportsMultipleAssignments", async () => {
+        expect(await nftRolesMetadata.supportsMultipleAssignments(role)).to.be.true
       })
     })
 
