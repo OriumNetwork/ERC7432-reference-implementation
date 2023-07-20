@@ -50,7 +50,7 @@ describe('Nfts Roles Metadata', () => {
         expect(await nftRolesMetadata.roleMetadata(role)).to.equal(data)
       })
       it("should get role supportsMultipleAssignments", async () => {
-        expect(await nftRolesMetadata.roleSupportsMultipleAssignments(role)).to.be.true
+        expect(await nftRolesMetadata.supportsMultipleAssignments(role)).to.be.true
       })
     })
 

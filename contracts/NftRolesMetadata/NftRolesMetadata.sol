@@ -34,7 +34,7 @@ contract NftRolesMetadata is NftRoles, INftRolesMetadata {
         return _roleMetadata[_role].data;
     }
 
-    function roleSupportsMultipleAssignments(bytes32 _role) external view override returns (bool) {
+    function supportsMultipleAssignments(bytes32 _role) external view override returns (bool) {
         return _roleMetadata[_role].supportsMultipleAssignments;
     }
 

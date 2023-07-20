@@ -42,5 +42,5 @@ interface INftRolesMetadata is INftRoles {
 
     /// @notice Returns whether the role supports multiple assignments.
     /// @param _role The role to query.
-    function roleSupportsMultipleAssignments(bytes32 _role) external view returns (bool);
+    function supportsMultipleAssignments(bytes32 _role) external view returns (bool);
 }
