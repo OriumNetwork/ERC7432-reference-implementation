@@ -1,152 +1,93 @@
-import hre, { ethers } from "hardhat";
-import { Contract } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
-import { randomHash } from "./utils";
-import { NftRolesInterfaceId } from "./contants";
+import hre, { ethers } from 'hardhat'
+import { Contract } from 'ethers'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { expect } from 'chai'
+import { randomHash } from './utils'
+import { NftRolesInterfaceId } from './contants'
 
-const { HashZero, AddressZero } = ethers.constants;
-const ONE_DAY = 60 * 60 * 24;
+const { HashZero, AddressZero } = ethers.constants
+const ONE_DAY = 60 * 60 * 24
 
-describe("Nfts Roles", () => {
-  let nftRoles: Contract;
+describe('Nfts Roles', () => {
+  let nftRoles: Contract
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let deployer: SignerWithAddress;
-  let roleCreator: SignerWithAddress;
-  let userOne: SignerWithAddress;
-  let userTwo: SignerWithAddress;
+  let deployer: SignerWithAddress
+  let roleCreator: SignerWithAddress
+  let userOne: SignerWithAddress
+  let userTwo: SignerWithAddress
 
-  const role = randomHash();
+  const role = randomHash()
 
   before(async function () {
     // prettier-ignore
     [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
-  });
+  })
 
   beforeEach(async () => {
-    const NftRolesFactory = await ethers.getContractFactory("NftRoles");
-    nftRoles = await NftRolesFactory.deploy();
-  });
+    const NftRolesFactory = await ethers.getContractFactory('NftRoles')
+    nftRoles = await NftRolesFactory.deploy()
+  })
 
-  describe("Nft Roles", async () => {
-    let expirationDate: number;
-    const tokenId = 1;
-    const data = HashZero;
+  describe('Nft Roles', async () => {
+    let expirationDate: number
+    const tokenId = 1
+    const data = HashZero
 
     beforeEach(async () => {
-      const blockNumber = await hre.ethers.provider.getBlockNumber();
-      const block = await hre.ethers.provider.getBlock(blockNumber);
-      expirationDate = block.timestamp + ONE_DAY;
-    });
+      const blockNumber = await hre.ethers.provider.getBlockNumber()
+      const block = await hre.ethers.provider.getBlock(blockNumber)
+      expirationDate = block.timestamp + ONE_DAY
+    })
 
-    describe("Grant role", async () => {
-      it("should grant role", async () => {
+    describe('Grant role', async () => {
+      it('should grant role', async () => {
         await expect(
-          nftRoles
-            .connect(roleCreator)
-            .grantRole(
-              role,
-              userOne.address,
-              AddressZero,
-              tokenId,
-              expirationDate,
-              data
-            )
+          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, data)
         )
-          .to.emit(nftRoles, "RoleGranted")
-          .withArgs(
-            role,
-            AddressZero,
-            tokenId,
-            userOne.address,
-            expirationDate,
-            data
-          );
-      });
-      it("should NOT grant role if expiration date is in the past", async () => {
-        const blockNumber = await hre.ethers.provider.getBlockNumber();
-        const block = await hre.ethers.provider.getBlock(blockNumber);
-        const expirationDateInThePast = block.timestamp - ONE_DAY;
+          .to.emit(nftRoles, 'RoleGranted')
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, data)
+      })
+      it('should NOT grant role if expiration date is in the past', async () => {
+        const blockNumber = await hre.ethers.provider.getBlockNumber()
+        const block = await hre.ethers.provider.getBlock(blockNumber)
+        const expirationDateInThePast = block.timestamp - ONE_DAY
 
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(
-              role,
-              userOne.address,
-              AddressZero,
-              tokenId,
-              expirationDateInThePast,
-              HashZero
-            )
-        ).to.be.revertedWith("NftRoles: expiration date must be in the future");
-      });
-    });
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDateInThePast, HashZero)
+        ).to.be.revertedWith('NftRoles: expiration date must be in the future')
+      })
+    })
 
-    describe("Revoke role", async () => {
-      it("should revoke role", async () => {
-        await expect(
-          nftRoles
-            .connect(roleCreator)
-            .revokeRole(role, userOne.address, AddressZero, tokenId)
-        )
-          .to.emit(nftRoles, "RoleRevoked")
-          .withArgs(role, AddressZero, tokenId, userOne.address);
-      });
-    });
+    describe('Revoke role', async () => {
+      it('should revoke role', async () => {
+        await expect(nftRoles.connect(roleCreator).revokeRole(role, userOne.address, AddressZero, tokenId))
+          .to.emit(nftRoles, 'RoleRevoked')
+          .withArgs(role, AddressZero, tokenId, userOne.address)
+      })
+    })
 
-    describe("Has role", async () => {
+    describe('Has role', async () => {
       beforeEach(async () => {
         await expect(
-          nftRoles
-            .connect(roleCreator)
-            .grantRole(
-              role,
-              userOne.address,
-              AddressZero,
-              tokenId,
-              expirationDate,
-              HashZero
-            )
+          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, HashZero)
         )
-          .to.emit(nftRoles, "RoleGranted")
-          .withArgs(
-            role,
-            AddressZero,
-            tokenId,
-            userOne.address,
-            expirationDate,
-            HashZero
-          );
+          .to.emit(nftRoles, 'RoleGranted')
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
 
         await expect(
-          nftRoles
-            .connect(roleCreator)
-            .grantRole(
-              role,
-              userTwo.address,
-              AddressZero,
-              tokenId,
-              expirationDate,
-              HashZero
-            )
+          nftRoles.connect(roleCreator).grantRole(role, userTwo.address, AddressZero, tokenId, expirationDate, HashZero)
         )
-          .to.emit(nftRoles, "RoleGranted")
-          .withArgs(
-            role,
-            AddressZero,
-            tokenId,
-            userTwo.address,
-            expirationDate,
-            HashZero
-          );
-      });
+          .to.emit(nftRoles, 'RoleGranted')
+          .withArgs(role, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
+      })
 
-      describe("Single User Roles", async () => {
-        const supportMultipleUsers = false;
+      describe('Single User Roles', async () => {
+        const supportMultipleUsers = false
 
-        it("should return true for the last user granted, and false for the others", async () => {
+        it('should return true for the last user granted, and false for the others', async () => {
           expect(
             await nftRoles.hasRole(
               role,
@@ -156,7 +97,7 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(false);
+          ).to.be.equal(false)
 
           expect(
             await nftRoles.hasRole(
@@ -167,11 +108,11 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(true);
-        });
-        it("should NOT return true for the last user if role is expired", async () => {
-          await hre.ethers.provider.send("evm_increaseTime", [ONE_DAY + 1]);
-          await hre.ethers.provider.send("evm_mine", []);
+          ).to.be.equal(true)
+        })
+        it('should NOT return true for the last user if role is expired', async () => {
+          await hre.ethers.provider.send('evm_increaseTime', [ONE_DAY + 1])
+          await hre.ethers.provider.send('evm_mine', [])
 
           expect(
             await nftRoles.hasRole(
@@ -182,14 +123,14 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(false);
-        });
-      });
+          ).to.be.equal(false)
+        })
+      })
 
-      describe("Multiple Users Roles", async () => {
-        const supportMultipleUsers = true;
+      describe('Multiple Users Roles', async () => {
+        const supportMultipleUsers = true
 
-        it("should return true for all users", async () => {
+        it('should return true for all users', async () => {
           expect(
             await nftRoles.hasRole(
               role,
@@ -199,7 +140,7 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(true);
+          ).to.be.equal(true)
 
           expect(
             await nftRoles.hasRole(
@@ -210,11 +151,11 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(true);
-        });
+          ).to.be.equal(true)
+        })
         it("should NOT return true for all users if role is expired'", async () => {
-          await hre.ethers.provider.send("evm_increaseTime", [ONE_DAY + 1]);
-          await hre.ethers.provider.send("evm_mine", []);
+          await hre.ethers.provider.send('evm_increaseTime', [ONE_DAY + 1])
+          await hre.ethers.provider.send('evm_mine', [])
 
           expect(
             await nftRoles.hasRole(
@@ -225,7 +166,7 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(false);
+          ).to.be.equal(false)
 
           expect(
             await nftRoles.hasRole(
@@ -236,45 +177,25 @@ describe("Nfts Roles", () => {
               tokenId,
               supportMultipleUsers
             )
-          ).to.be.equal(false);
-        });
-      });
-    });
+          ).to.be.equal(false)
+        })
+      })
+    })
 
-    describe("Role Data", async () => {
-      it("should grant role with data", async () => {
-        const customData = "0x1234";
+    describe('Role Data', async () => {
+      it('should grant role with data', async () => {
+        const customData = '0x1234'
 
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(
-              role,
-              userOne.address,
-              AddressZero,
-              tokenId,
-              expirationDate,
-              customData
-            )
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData)
         )
-          .to.emit(nftRoles, "RoleGranted")
-          .withArgs(
-            role,
-            AddressZero,
-            tokenId,
-            userOne.address,
-            expirationDate,
-            customData
-          );
+          .to.emit(nftRoles, 'RoleGranted')
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
 
-        const returnedData = await nftRoles.roleData(
-          role,
-          roleCreator.address,
-          userOne.address,
-          AddressZero,
-          tokenId
-        );
-        expect(returnedData).to.equal(customData);
+        const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
+        expect(returnedData).to.equal(customData)
 
         const returnedExpirationDate = await nftRoles.roleExpirationDate(
           role,
@@ -282,71 +203,53 @@ describe("Nfts Roles", () => {
           userOne.address,
           AddressZero,
           tokenId
-        );
-        expect(returnedExpirationDate).to.equal(expirationDate);
-      });
-    });
+        )
+        expect(returnedExpirationDate).to.equal(expirationDate)
+      })
+    })
 
-    describe("ERC165", async function () {
+    describe('ERC165', async function () {
       it(`should return true for INftRoles interface id (${NftRolesInterfaceId})`, async function () {
-        expect(await nftRoles.supportsInterface(NftRolesInterfaceId)).to.be
-          .true;
-      });
-    });
+        expect(await nftRoles.supportsInterface(NftRolesInterfaceId)).to.be.true
+      })
+    })
 
-    describe("Metadata", async () => {
-      it("Should register role metadata in the ERC721 tokenURI", async () => {
-        const NftFactory = await ethers.getContractFactory("Nft");
-        const nft = await NftFactory.deploy();
-        await nft.deployed();
+    describe('Metadata', async () => {
+      it('Should register role metadata in the ERC721 tokenURI', async () => {
+        const NftFactory = await ethers.getContractFactory('Nft')
+        const nft = await NftFactory.deploy()
+        await nft.deployed()
 
         const roleMetadata = {
-          name: "User Role",
-          description: "User of the Nft",
+          name: 'User Role',
+          description: 'User of the Nft',
           inputs: [
             {
-              name: "user",
-              type: "address",
-              description: "User address",
+              name: 'user',
+              type: 'address',
+              description: 'User address',
             },
           ],
-        };
+        }
 
-        await nft.setRolesMetadata(JSON.stringify(roleMetadata));
-        console.log("JSON.stringify(roleMetadata)", JSON.stringify(roleMetadata));
+        await nft.setRolesMetadata(JSON.stringify(roleMetadata))
+        console.log('JSON.stringify(roleMetadata)', JSON.stringify(roleMetadata))
 
-        const metadataBase64 = await nft.tokenURI(tokenId);
-        const metadataJson = JSON.parse(
-          Buffer.from(metadataBase64.split(",")[1], "base64").toString()
-        );
-        console.log(metadataJson);
+        const metadataBase64 = await nft.tokenURI(tokenId)
+        const metadataJson = JSON.parse(Buffer.from(metadataBase64.split(',')[1], 'base64').toString())
+        console.log(metadataJson)
 
-        expect(metadataJson).to.have.property("roles");
-        expect(metadataJson.roles).to.have.lengthOf(1);
-        expect(metadataJson.roles[0]).to.have.property(
-          "name",
-          roleMetadata.name
-        );
-        expect(metadataJson.roles[0]).to.have.property(
-          "description",
-          roleMetadata.description
-        );
+        expect(metadataJson).to.have.property('roles')
+        expect(metadataJson.roles).to.have.lengthOf(1)
+        expect(metadataJson.roles[0]).to.have.property('name', roleMetadata.name)
+        expect(metadataJson.roles[0]).to.have.property('description', roleMetadata.description)
 
-        expect(metadataJson.roles[0]).to.have.property("inputs");
-        expect(metadataJson.roles[0].inputs).to.have.lengthOf(1);
-        expect(metadataJson.roles[0].inputs[0]).to.have.property(
-          "name",
-          roleMetadata.inputs[0].name
-        );
-        expect(metadataJson.roles[0].inputs[0]).to.have.property(
-          "type",
-          roleMetadata.inputs[0].type
-        );
-        expect(metadataJson.roles[0].inputs[0]).to.have.property(
-          "description",
-          roleMetadata.inputs[0].description
-        );
-      });
-    });
-  });
-});
+        expect(metadataJson.roles[0]).to.have.property('inputs')
+        expect(metadataJson.roles[0].inputs).to.have.lengthOf(1)
+        expect(metadataJson.roles[0].inputs[0]).to.have.property('name', roleMetadata.inputs[0].name)
+        expect(metadataJson.roles[0].inputs[0]).to.have.property('type', roleMetadata.inputs[0].type)
+        expect(metadataJson.roles[0].inputs[0]).to.have.property('description', roleMetadata.inputs[0].description)
+      })
+    })
+  })
+})
