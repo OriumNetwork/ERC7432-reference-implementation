@@ -177,3 +177,14 @@ The properties of the `roles` array are SUGGESTED, and developers should add any
 (e.g., an image for the role). However, it's highly RECOMMENDED to include the `supportsMultipleAssignments` field, as
 shown in the example. This field is used in the `hasRole` function (refer back to
 [Unique and Non-Unique Roles](#unique-and-non-unique-roles)).
+
+## Security Considerations
+
+Developers integrating the Non-Fungible Token Roles interface should consider the following on their implementations:
+
+* Ensure proper access controls are in place to prevent unauthorized role assignments or revocations.
+* Take into account potential attack vectors such as reentrancy and ensure appropriate safeguards are in place.
+* Since this standard does not check NFT ownership, it's the responsibility of the dApp to query for the NFT Owner and
+  pass the correct `_grantor` to the `hasRole` function.
+* It's the responsibility of the dApp to check if the role is unique or non-unique. For unique roles, `hasRole` should
+be called with `_supportsMultipleAssignments` set to `false` to ensure the role was not assigned to another account.
