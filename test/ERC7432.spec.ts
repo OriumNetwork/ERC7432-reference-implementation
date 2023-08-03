@@ -6,7 +6,7 @@ import { randomHash } from './utils'
 import { ERC7432InterfaceId } from './contants'
 import nock from 'nock'
 import axios from 'axios'
-import { AbiCoder, defaultAbiCoder } from 'ethers/lib/utils'
+import { defaultAbiCoder } from 'ethers/lib/utils'
 
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
