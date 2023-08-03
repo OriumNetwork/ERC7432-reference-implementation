@@ -1,1 +1,1 @@
-export const NftRolesInterfaceId = '0x688fce16'
+export const ERC7432InterfaceId = '0x688fce16'
