@@ -43,7 +43,7 @@ describe('Nfts Roles', () => {
     describe('Grant role', async () => {
       it('should grant role', async () => {
         await expect(
-          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, data)
+          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, data),
         )
           .to.emit(nftRoles, 'RoleGranted')
           .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, data)
@@ -56,7 +56,7 @@ describe('Nfts Roles', () => {
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDateInThePast, HashZero)
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDateInThePast, HashZero),
         ).to.be.revertedWith('NftRoles: expiration date must be in the future')
       })
     })
@@ -72,13 +72,17 @@ describe('Nfts Roles', () => {
     describe('Has role', async () => {
       beforeEach(async () => {
         await expect(
-          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, HashZero)
+          nftRoles
+            .connect(roleCreator)
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
           .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
 
         await expect(
-          nftRoles.connect(roleCreator).grantRole(role, userTwo.address, AddressZero, tokenId, expirationDate, HashZero)
+          nftRoles
+            .connect(roleCreator)
+            .grantRole(role, userTwo.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
           .withArgs(role, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
@@ -95,8 +99,8 @@ describe('Nfts Roles', () => {
               userOne.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(false)
 
           expect(
@@ -106,8 +110,8 @@ describe('Nfts Roles', () => {
               userTwo.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(true)
         })
         it('should NOT return true for the last user if role is expired', async () => {
@@ -121,8 +125,8 @@ describe('Nfts Roles', () => {
               userOne.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(false)
         })
       })
@@ -138,8 +142,8 @@ describe('Nfts Roles', () => {
               userOne.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(true)
 
           expect(
@@ -149,8 +153,8 @@ describe('Nfts Roles', () => {
               userTwo.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(true)
         })
         it("should NOT return true for all users if role is expired'", async () => {
@@ -164,8 +168,8 @@ describe('Nfts Roles', () => {
               userOne.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(false)
 
           expect(
@@ -175,8 +179,8 @@ describe('Nfts Roles', () => {
               userTwo.address,
               AddressZero,
               tokenId,
-              supportMultipleUsers
-            )
+              supportMultipleUsers,
+            ),
           ).to.be.equal(false)
         })
       })
@@ -189,7 +193,7 @@ describe('Nfts Roles', () => {
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData)
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData),
         )
           .to.emit(nftRoles, 'RoleGranted')
           .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
@@ -202,7 +206,7 @@ describe('Nfts Roles', () => {
           roleCreator.address,
           userOne.address,
           AddressZero,
-          tokenId
+          tokenId,
         )
         expect(returnedExpirationDate).to.equal(expirationDate)
       })
