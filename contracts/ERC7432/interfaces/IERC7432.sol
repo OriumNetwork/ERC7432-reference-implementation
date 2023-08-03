@@ -6,7 +6,7 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
 
 
 /// @notice The Nft Roles interface enables granting and revoking temporary roles for tokens.
-interface INftRoles is IERC165 {
+interface IERC7432 is IERC165 {
     struct RoleData {
         uint64 expirationDate;
         bytes data;

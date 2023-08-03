@@ -8,7 +8,7 @@ import { NftRolesInterfaceId } from './contants'
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
 
-describe('Nfts Roles', () => {
+describe('ERC7432', () => {
   let nftRoles: Contract
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,7 +29,7 @@ describe('Nfts Roles', () => {
     nftRoles = await NftRolesFactory.deploy()
   })
 
-  describe('Nft Roles', async () => {
+  describe('Main Functions', async () => {
     let expirationDate: number
     const tokenId = 1
     const data = HashZero
