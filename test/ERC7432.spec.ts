@@ -4,6 +4,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { randomHash } from './utils'
 import { ERC7432InterfaceId } from './contants'
+import nock from 'nock'
+import axios from 'axios'
+import { AbiCoder, defaultAbiCoder } from 'ethers/lib/utils'
 
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
@@ -210,49 +213,61 @@ describe('ERC7432', () => {
         )
         expect(returnedExpirationDate).to.equal(expirationDate)
       })
+      it('should decode role custom data with metadata', async () => {
+        const nftMetadata = {
+          name: 'Nft name',
+          description: 'Nft description',
+          image: 'https://example.com/image.png',
+          roles: [
+            {
+              name: 'Role Name',
+              description: 'User of the Nft',
+              inputs: [
+                {
+                  name: 'user',
+                  type: 'address',
+                  description: 'User address',
+                },
+              ],
+            },
+          ],
+        }
+
+        const NftFactory = await ethers.getContractFactory('Nft')
+        const nft = await NftFactory.deploy()
+        await nft.deployed()
+
+        const customData = defaultAbiCoder.encode(['address'], [userOne.address])
+
+        await expect(
+          nftRoles
+            .connect(roleCreator)
+            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData),
+        )
+          .to.emit(nftRoles, 'RoleGranted')
+          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
+
+        const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
+
+        const scope = nock('https://example.com').get(`/${tokenId}`).reply(200, nftMetadata)
+        const tokenUri = await nft.tokenURI(tokenId)
+        const response = await axios.get(tokenUri)
+        scope.done()
+
+        const metadata = response.data
+        const roles = metadata.roles
+
+        const returnDataDecoded = defaultAbiCoder.decode(
+          roles[0].inputs.map((roleInput: any) => roleInput.type),
+          returnedData,
+        )
+        expect(returnDataDecoded).to.deep.equal([userOne.address])
+      })
     })
 
     describe('ERC165', async function () {
       it(`should return true for INftRoles interface id (${ERC7432InterfaceId})`, async function () {
         expect(await nftRoles.supportsInterface(ERC7432InterfaceId)).to.be.true
-      })
-    })
-
-    describe('Metadata', async () => {
-      it('Should register role metadata in the ERC721 tokenURI', async () => {
-        const NftFactory = await ethers.getContractFactory('Nft')
-        const nft = await NftFactory.deploy()
-        await nft.deployed()
-
-        const roleMetadata = {
-          name: 'User Role',
-          description: 'User of the Nft',
-          inputs: [
-            {
-              name: 'user',
-              type: 'address',
-              description: 'User address',
-            },
-          ],
-        }
-
-        await nft.setRolesMetadata(JSON.stringify(roleMetadata))
-        console.log('JSON.stringify(roleMetadata)', JSON.stringify(roleMetadata))
-
-        const metadataBase64 = await nft.tokenURI(tokenId)
-        const metadataJson = JSON.parse(Buffer.from(metadataBase64.split(',')[1], 'base64').toString())
-        console.log(metadataJson)
-
-        expect(metadataJson).to.have.property('roles')
-        expect(metadataJson.roles).to.have.lengthOf(1)
-        expect(metadataJson.roles[0]).to.have.property('name', roleMetadata.name)
-        expect(metadataJson.roles[0]).to.have.property('description', roleMetadata.description)
-
-        expect(metadataJson.roles[0]).to.have.property('inputs')
-        expect(metadataJson.roles[0].inputs).to.have.lengthOf(1)
-        expect(metadataJson.roles[0].inputs[0]).to.have.property('name', roleMetadata.inputs[0].name)
-        expect(metadataJson.roles[0].inputs[0]).to.have.property('type', roleMetadata.inputs[0].type)
-        expect(metadataJson.roles[0].inputs[0]).to.have.property('description', roleMetadata.inputs[0].description)
       })
     })
   })
