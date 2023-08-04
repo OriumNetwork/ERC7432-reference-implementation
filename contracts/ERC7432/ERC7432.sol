@@ -13,7 +13,7 @@ contract ERC7432 is IERC7432 {
     mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => address)))) public lastRoleAssignment;
 
     modifier validExpirationDate(uint64 _expirationDate) {
-        require(_expirationDate > block.timestamp, "NftRoles: expiration date must be in the future");
+        require(_expirationDate > block.timestamp, "ERC7432: expiration date must be in the future");
         _;
     }
 
