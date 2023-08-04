@@ -29,15 +29,6 @@ describe('ERC7432', () => {
   before(async function () {
     // prettier-ignore
     [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
-  })
-
-  beforeEach(async () => {
-    const NftRolesFactory = await ethers.getContractFactory('ERC7432')
-    nftRoles = await NftRolesFactory.deploy()
-
-    const NftFactory = await ethers.getContractFactory('Nft')
-    nft = await NftFactory.deploy()
-    await nft.deployed()
 
     const metadata: NftMetadata = {
       name: 'Nft name',
@@ -78,7 +69,16 @@ describe('ERC7432', () => {
       ],
     }
 
-    nock('https://example.com').get(`/${tokenId}`).reply(200, metadata)
+    nock('https://example.com').persist().get(`/${tokenId}`).reply(200, metadata)
+  })
+
+  beforeEach(async () => {
+    const NftRolesFactory = await ethers.getContractFactory('ERC7432')
+    nftRoles = await NftRolesFactory.deploy()
+
+    const NftFactory = await ethers.getContractFactory('Nft')
+    nft = await NftFactory.deploy()
+    await nft.deployed()
   })
 
   describe('Main Functions', async () => {
