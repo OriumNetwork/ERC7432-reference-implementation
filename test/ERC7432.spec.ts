@@ -21,10 +21,31 @@ describe('ERC7432', () => {
   let userTwo: SignerWithAddress
 
   const role = randomHash()
+  const tokenId = 1
 
   before(async function () {
     // prettier-ignore
     [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
+
+    const nftMetadata = {
+      name: 'Nft name',
+      description: 'Nft description',
+      image: 'https://example.com/image.png',
+      roles: [
+        {
+          name: 'Role Name',
+          description: 'User of the Nft',
+          inputs: [
+            {
+              name: 'user',
+              type: 'address',
+            },
+          ],
+        },
+      ],
+    }
+
+    nock('https://example.com').get(`/${tokenId}`).reply(200, nftMetadata)
   })
 
   beforeEach(async () => {
@@ -34,7 +55,6 @@ describe('ERC7432', () => {
 
   describe('Main Functions', async () => {
     let expirationDate: number
-    const tokenId = 1
     const data = HashZero
 
     beforeEach(async () => {
@@ -214,25 +234,6 @@ describe('ERC7432', () => {
         expect(returnedExpirationDate).to.equal(expirationDate)
       })
       it('should decode role custom data with metadata', async () => {
-        const nftMetadata = {
-          name: 'Nft name',
-          description: 'Nft description',
-          image: 'https://example.com/image.png',
-          roles: [
-            {
-              name: 'Role Name',
-              description: 'User of the Nft',
-              inputs: [
-                {
-                  name: 'user',
-                  type: 'address',
-                  description: 'User address',
-                },
-              ],
-            },
-          ],
-        }
-
         const NftFactory = await ethers.getContractFactory('Nft')
         const nft = await NftFactory.deploy()
         await nft.deployed()
@@ -249,10 +250,8 @@ describe('ERC7432', () => {
 
         const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
 
-        const scope = nock('https://example.com').get(`/${tokenId}`).reply(200, nftMetadata)
         const tokenUri = await nft.tokenURI(tokenId)
         const response = await axios.get(tokenUri)
-        scope.done()
 
         const metadata = response.data
         const roles = metadata.roles
@@ -266,7 +265,7 @@ describe('ERC7432', () => {
     })
 
     describe('ERC165', async function () {
-      it(`should return true for INftRoles interface id (${ERC7432InterfaceId})`, async function () {
+      it(`should return true for IERC7432 interface id (${ERC7432InterfaceId})`, async function () {
         expect(await nftRoles.supportsInterface(ERC7432InterfaceId)).to.be.true
       })
     })
