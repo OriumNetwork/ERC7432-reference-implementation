@@ -25,11 +25,15 @@ describe('ERC7432', () => {
   const PROPERTY_TENANT = solidityKeccak256(['string'], ['PROPERTY_TENANT'])
 
   const tokenId = 1
-  let nftMetadata: NftMetadata
 
   before(async function () {
     // prettier-ignore
     [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
+  })
+
+  beforeEach(async () => {
+    const NftRolesFactory = await ethers.getContractFactory('ERC7432')
+    nftRoles = await NftRolesFactory.deploy()
 
     const NftFactory = await ethers.getContractFactory('Nft')
     nft = await NftFactory.deploy()
@@ -74,27 +78,22 @@ describe('ERC7432', () => {
       ],
     }
 
-    const scope = nock('https://example.com').get(`/${tokenId}`).reply(200, metadata)
-
-    const response = await axios.get(`https://example.com/${tokenId}`)
-    nftMetadata = response.data
-
-    scope.done()
-  })
-
-  beforeEach(async () => {
-    const NftRolesFactory = await ethers.getContractFactory('ERC7432')
-    nftRoles = await NftRolesFactory.deploy()
+    nock('https://example.com').get(`/${tokenId}`).reply(200, metadata)
   })
 
   describe('Main Functions', async () => {
     let expirationDate: number
     const data = HashZero
+    let nftMetadata: NftMetadata
 
     beforeEach(async () => {
       const blockNumber = await hre.ethers.provider.getBlockNumber()
       const block = await hre.ethers.provider.getBlock(blockNumber)
       expirationDate = block.timestamp + ONE_DAY
+
+      const tokenURI = await nft.tokenURI(tokenId)
+      const response = await axios.get(tokenURI)
+      nftMetadata = response.data
     })
 
     describe('Grant role', async () => {
@@ -322,10 +321,7 @@ describe('ERC7432', () => {
         )
 
         const tenantRole = nftMetadata.roles.find((role: Role) => role.name === 'PROPERTY_TENANT')
-        const decodedData = defaultAbiCoder.decode(
-          [`${tenantRole!.inputs.map((input) => input.type)}`],
-          returnedData,
-        )
+        const decodedData = defaultAbiCoder.decode([`${tenantRole!.inputs.map((input) => input.type)}`], returnedData)
 
         expect(returnedData).to.equal(customData)
         expect(decodedData[0]).to.deep.equal(rentalCost)
