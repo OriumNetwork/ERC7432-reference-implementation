@@ -2,17 +2,18 @@ import hre, { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
-import { randomHash } from './utils'
 import { ERC7432InterfaceId } from './contants'
 import nock from 'nock'
 import axios from 'axios'
-import { defaultAbiCoder } from 'ethers/lib/utils'
+import { defaultAbiCoder, solidityKeccak256 } from 'ethers/lib/utils'
+import { NftMetadata, Role } from './types'
 
 const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
 
 describe('ERC7432', () => {
   let nftRoles: Contract
+  let nft: Contract
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let deployer: SignerWithAddress
@@ -20,32 +21,65 @@ describe('ERC7432', () => {
   let userOne: SignerWithAddress
   let userTwo: SignerWithAddress
 
-  const role = randomHash()
+  const PROPERTY_MANAGER = solidityKeccak256(['string'], ['PROPERTY_MANAGER'])
+  const PROPERTY_TENANT = solidityKeccak256(['string'], ['PROPERTY_TENANT'])
+
   const tokenId = 1
+  let nftMetadata: NftMetadata
 
   before(async function () {
     // prettier-ignore
     [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
 
-    const nftMetadata = {
+    const NftFactory = await ethers.getContractFactory('Nft')
+    nft = await NftFactory.deploy()
+    await nft.deployed()
+
+    const metadata: NftMetadata = {
       name: 'Nft name',
       description: 'Nft description',
-      image: 'https://example.com/image.png',
       roles: [
         {
-          name: 'Role Name',
-          description: 'User of the Nft',
+          name: 'PROPERTY_MANAGER',
+          description: 'Property Manager',
+          supportsMultipleAssignments: false,
           inputs: [
             {
-              name: 'user',
-              type: 'address',
+              name: 'profitSplit',
+              type: 'tuple[]',
+              components: [
+                {
+                  name: 'eventId',
+                  type: 'uint256',
+                },
+                {
+                  name: 'split',
+                  type: 'uint256[]',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'PROPERTY_TENANT',
+          description: 'Property Tenant',
+          supportsMultipleAssignments: true,
+          inputs: [
+            {
+              name: 'rentalCost',
+              type: 'uint256',
             },
           ],
         },
       ],
     }
 
-    nock('https://example.com').get(`/${tokenId}`).reply(200, nftMetadata)
+    const scope = nock('https://example.com').get(`/${tokenId}`).reply(200, metadata)
+
+    const response = await axios.get(`https://example.com/${tokenId}`)
+    nftMetadata = response.data
+
+    scope.done()
   })
 
   beforeEach(async () => {
@@ -66,10 +100,12 @@ describe('ERC7432', () => {
     describe('Grant role', async () => {
       it('should grant role', async () => {
         await expect(
-          nftRoles.connect(roleCreator).grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, data),
+          nftRoles
+            .connect(roleCreator)
+            .grantRole(PROPERTY_MANAGER, userOne.address, AddressZero, tokenId, expirationDate, data),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, data)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, data)
       })
       it('should NOT grant role if expiration date is in the past', async () => {
         const blockNumber = await hre.ethers.provider.getBlockNumber()
@@ -79,16 +115,16 @@ describe('ERC7432', () => {
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDateInThePast, HashZero),
+            .grantRole(PROPERTY_MANAGER, userOne.address, AddressZero, tokenId, expirationDateInThePast, HashZero),
         ).to.be.revertedWith('NftRoles: expiration date must be in the future')
       })
     })
 
     describe('Revoke role', async () => {
       it('should revoke role', async () => {
-        await expect(nftRoles.connect(roleCreator).revokeRole(role, userOne.address, AddressZero, tokenId))
+        await expect(nftRoles.connect(roleCreator).revokeRole(PROPERTY_MANAGER, userOne.address, AddressZero, tokenId))
           .to.emit(nftRoles, 'RoleRevoked')
-          .withArgs(role, AddressZero, tokenId, userOne.address)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address)
       })
     })
 
@@ -97,27 +133,29 @@ describe('ERC7432', () => {
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, HashZero),
+            .grantRole(PROPERTY_MANAGER, userOne.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
 
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userTwo.address, AddressZero, tokenId, expirationDate, HashZero),
+            .grantRole(PROPERTY_MANAGER, userTwo.address, AddressZero, tokenId, expirationDate, HashZero),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
       })
 
       describe('Single User Roles', async () => {
-        const supportMultipleUsers = false
+        const supportMultipleUsers = nftMetadata.roles.find(
+          (role: any) => role.name === 'PROPERTY_MANAGER',
+        )?.supportsMultipleAssignments
 
         it('should return true for the last user granted, and false for the others', async () => {
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_MANAGER,
               roleCreator.address,
               userOne.address,
               AddressZero,
@@ -128,7 +166,7 @@ describe('ERC7432', () => {
 
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_MANAGER,
               roleCreator.address,
               userTwo.address,
               AddressZero,
@@ -143,7 +181,7 @@ describe('ERC7432', () => {
 
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_MANAGER,
               roleCreator.address,
               userOne.address,
               AddressZero,
@@ -155,12 +193,14 @@ describe('ERC7432', () => {
       })
 
       describe('Multiple Users Roles', async () => {
-        const supportMultipleUsers = true
+        const supportMultipleUsers = nftMetadata.roles.find(
+          (role: any) => role.name === 'PROPERTY_TENANT',
+        )?.supportsMultipleAssignments
 
         it('should return true for all users', async () => {
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_TENANT,
               roleCreator.address,
               userOne.address,
               AddressZero,
@@ -171,7 +211,7 @@ describe('ERC7432', () => {
 
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_TENANT,
               roleCreator.address,
               userTwo.address,
               AddressZero,
@@ -186,7 +226,7 @@ describe('ERC7432', () => {
 
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_TENANT,
               roleCreator.address,
               userOne.address,
               AddressZero,
@@ -197,7 +237,7 @@ describe('ERC7432', () => {
 
           expect(
             await nftRoles.hasRole(
-              role,
+              PROPERTY_TENANT,
               roleCreator.address,
               userTwo.address,
               AddressZero,
@@ -210,57 +250,85 @@ describe('ERC7432', () => {
     })
 
     describe('Role Data', async () => {
-      it('should grant role with data', async () => {
-        const customData = '0x1234'
+      it('should grant PROPERTY_MANAGER with customData and decode tuple with nftMetadata correctly', async () => {
+        //Encode profit split data
+        const profitSplit = [
+          {
+            eventId: 1,
+            split: [60, 30, 5, 5],
+          },
+          {
+            eventId: 2,
+            split: [50, 50],
+          },
+        ]
+        const customData = defaultAbiCoder.encode(['(uint256 eventId,uint256[] split)[]'], [profitSplit])
 
         await expect(
           nftRoles
             .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData),
+            .grantRole(PROPERTY_MANAGER, userOne.address, AddressZero, tokenId, expirationDate, customData),
         )
           .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, customData)
 
-        const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
-        expect(returnedData).to.equal(customData)
-
-        const returnedExpirationDate = await nftRoles.roleExpirationDate(
-          role,
+        const returnedData = await nftRoles.roleData(
+          PROPERTY_MANAGER,
           roleCreator.address,
           userOne.address,
           AddressZero,
           tokenId,
         )
-        expect(returnedExpirationDate).to.equal(expirationDate)
-      })
-      it('should decode role custom data with metadata', async () => {
-        const NftFactory = await ethers.getContractFactory('Nft')
-        const nft = await NftFactory.deploy()
-        await nft.deployed()
 
-        const customData = defaultAbiCoder.encode(['address'], [userOne.address])
-
-        await expect(
-          nftRoles
-            .connect(roleCreator)
-            .grantRole(role, userOne.address, AddressZero, tokenId, expirationDate, customData),
+        const returnedExpirationDate = await nftRoles.roleExpirationDate(
+          PROPERTY_MANAGER,
+          roleCreator.address,
+          userOne.address,
+          AddressZero,
+          tokenId,
         )
-          .to.emit(nftRoles, 'RoleGranted')
-          .withArgs(role, AddressZero, tokenId, userOne.address, expirationDate, customData)
 
-        const returnedData = await nftRoles.roleData(role, roleCreator.address, userOne.address, AddressZero, tokenId)
+        expect(returnedExpirationDate).to.equal(expirationDate)
+        expect(returnedData).to.equal(customData)
 
-        const tokenUri = await nft.tokenURI(tokenId)
-        const response = await axios.get(tokenUri)
-
-        const metadata = response.data
-        const roles = metadata.roles
-
+        const propertyManagerRole = nftMetadata.roles.find((role: Role) => role.name === 'PROPERTY_MANAGER')
+        const inputs = propertyManagerRole?.inputs[0].components
         const returnDataDecoded = defaultAbiCoder.decode(
-          roles[0].inputs.map((roleInput: any) => roleInput.type),
+          [`(${inputs?.map((input) => `${input.type} ${input.name}`)})[]`],
           returnedData,
         )
-        expect(returnDataDecoded).to.deep.equal([userOne.address])
+        returnDataDecoded.map((data: any) => {
+          data.map((returnedStruct: any, index: number) => {
+            expect(returnedStruct.eventId).to.deep.equal(profitSplit[index].eventId)
+            expect(returnedStruct.split).to.deep.equal(profitSplit[index].split)
+          })
+        })
+      })
+      it('should grant PROPERTY_TENANT with customData and decode tuple with nftMetadata correctly', async () => {
+        // Encode rentalCost data
+        const rentalCost = ethers.utils.parseEther('1.5')
+        const customData = defaultAbiCoder.encode(['uint256'], [rentalCost])
+
+        await nftRoles
+          .connect(roleCreator)
+          .grantRole(PROPERTY_TENANT, userOne.address, AddressZero, tokenId, expirationDate, customData)
+
+        const returnedData = await nftRoles.roleData(
+          PROPERTY_TENANT,
+          roleCreator.address,
+          userOne.address,
+          AddressZero,
+          tokenId,
+        )
+
+        const tenantRole = nftMetadata.roles.find((role: Role) => role.name === 'PROPERTY_TENANT')
+        const decodedData = defaultAbiCoder.decode(
+          [`${tenantRole!.inputs.map((input) => input.type)}`],
+          returnedData,
+        )
+
+        expect(returnedData).to.equal(customData)
+        expect(decodedData[0]).to.deep.equal(rentalCost)
       })
     })
 
