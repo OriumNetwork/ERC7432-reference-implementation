@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.9;
 
-import { INftRoles } from "./interfaces/INftRoles.sol";
+import { IERC7432 } from "./interfaces/IERC7432.sol";
 
-contract NftRoles is INftRoles {
+contract ERC7432 is IERC7432 {
     // owner => user => tokenAddress => tokenId => role => struct(expirationDate, data)
     mapping(address => mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => RoleData)))))
         public roleAssignments;
@@ -13,7 +13,7 @@ contract NftRoles is INftRoles {
     mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => address)))) public lastRoleAssignment;
 
     modifier validExpirationDate(uint64 _expirationDate) {
-        require(_expirationDate > block.timestamp, "NftRoles: expiration date must be in the future");
+        require(_expirationDate > block.timestamp, "ERC7432: expiration date must be in the future");
         _;
     }
 
@@ -77,6 +77,6 @@ contract NftRoles is INftRoles {
     }
 
     function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
-        return interfaceId == type(INftRoles).interfaceId;
+        return interfaceId == type(IERC7432).interfaceId;
     }
 }
