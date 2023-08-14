@@ -19,9 +19,9 @@ contract ERC7432 is IERC7432 {
 
     function grantRole(
         bytes32 _role,
-        address _grantee,
         address _tokenAddress,
         uint256 _tokenId,
+        address _grantee,
         uint64 _expirationDate,
         bytes calldata _data
     ) external validExpirationDate(_expirationDate) {
@@ -30,7 +30,7 @@ contract ERC7432 is IERC7432 {
         emit RoleGranted(_role, _tokenAddress, _tokenId, _grantee, _expirationDate, _data);
     }
 
-    function revokeRole(bytes32 _role, address _grantee, address _tokenAddress, uint256 _tokenId) external {
+    function revokeRole(bytes32 _role, address _tokenAddress, uint256 _tokenId, address _grantee) external {
         delete roleAssignments[msg.sender][_grantee][_tokenAddress][_tokenId][_role];
         delete lastRoleAssignment[msg.sender][_tokenAddress][_tokenId][_role];
         emit RoleRevoked(_role, _tokenAddress, _tokenId, _grantee);
@@ -38,39 +38,39 @@ contract ERC7432 is IERC7432 {
 
     function hasRole(
         bytes32 _role,
-        address _granter,
-        address _grantee,
         address _tokenAddress,
         uint256 _tokenId,
+        address _grantor,
+        address _grantee,
         bool _supportsMultipleAssignments
     ) external view returns (bool) {
-        bool isValid = roleAssignments[_granter][_grantee][_tokenAddress][_tokenId][_role].expirationDate >
+        bool isValid = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate >
             block.timestamp;
 
         if (_supportsMultipleAssignments) {
             return isValid;
         } else {
-            return isValid && lastRoleAssignment[_granter][_tokenAddress][_tokenId][_role] == _grantee;
+            return isValid && lastRoleAssignment[_grantor][_tokenAddress][_tokenId][_role] == _grantee;
         }
     }
 
     function roleData(
         bytes32 _role,
-        address _granter,
-        address _grantee,
         address _tokenAddress,
-        uint256 _tokenId
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
     ) external view returns (bytes memory data_) {
-        RoleData memory _roleData = roleAssignments[_granter][_grantee][_tokenAddress][_tokenId][_role];
+        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
         return (_roleData.data);
     }
 
      function roleExpirationDate(
         bytes32 _role,
-        address _grantor,
-        address _grantee,
         address _tokenAddress,
-        uint256 _tokenId
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
     ) external view returns (uint64 expirationDate_){
         RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
         return (_roleData.expirationDate);
