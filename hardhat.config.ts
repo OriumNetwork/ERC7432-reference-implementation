@@ -1,7 +1,4 @@
 import 'solidity-coverage'
-import 'hardhat-gas-reporter'
-import '@nomiclabs/hardhat-etherscan'
-import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-spdx-license-identifier'
 import '@nomicfoundation/hardhat-toolbox'
 
@@ -15,13 +12,6 @@ module.exports = {
   },
   mocha: {
     timeout: 840000,
-  },
-  gasReporter: {
-    enabled: true,
-    excludeContracts: ['contracts/mocks'],
-    gasPrice: 100,
-    token: 'MATIC',
-    currency: 'USD',
   },
   spdxLicenseIdentifier: {
     overwrite: false,

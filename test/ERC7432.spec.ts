@@ -37,7 +37,7 @@ describe('ERC7432', () => {
         {
           name: 'PROPERTY_MANAGER',
           description: 'Property Manager',
-          supportsMultipleAssignments: false,
+          isUniqueRole: false,
           inputs: [
             {
               name: 'profitSplit',
@@ -58,7 +58,7 @@ describe('ERC7432', () => {
         {
           name: 'PROPERTY_TENANT',
           description: 'Property Tenant',
-          supportsMultipleAssignments: true,
+          isUniqueRole: true,
           inputs: [
             {
               name: 'rentalCost',
@@ -140,37 +140,31 @@ describe('ERC7432', () => {
         await expect(
           ERC7432
             .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, userTwo.address, AddressZero, tokenId, expirationDate, HashZero),
+            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userTwo.address, expirationDate, HashZero),
         )
           .to.emit(ERC7432, 'RoleGranted')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
       })
 
-      describe('Single User Roles', async () => {
-        const supportMultipleUsers = nftMetadata.roles.find(
-          (role: any) => role.name === 'PROPERTY_MANAGER',
-        )?.supportsMultipleAssignments
-
+      describe('Unique Roles', async () => {
         it('should return true for the last user granted, and false for the others', async () => {
           expect(
-            await ERC7432.hasRole(
-              PROPERTY_MANAGER,
-                           AddressZero,
-              tokenId, 
-roleCreator.address,
-              userOne.address,
-              supportMultipleUsers,
-            ),
-          ).to.be.equal(false)
-
-          expect(
-            await ERC7432.hasRole(
+            await ERC7432.hasUniqueRole(
               PROPERTY_MANAGER,
               AddressZero,
               tokenId, 
               roleCreator.address,
               userOne.address,
-              supportMultipleUsers,
+            ),
+          ).to.be.equal(false)
+
+          expect(
+            await ERC7432.hasUniqueRole(
+              PROPERTY_MANAGER,
+              AddressZero,
+              tokenId, 
+              roleCreator.address,
+              userTwo.address,
             ),
           ).to.be.equal(true)
         })
@@ -179,40 +173,36 @@ roleCreator.address,
           await hre.ethers.provider.send('evm_mine', [])
 
           expect(
-            await ERC7432.hasRole(
+            await ERC7432.hasUniqueRole(
               PROPERTY_MANAGER,
-                           AddressZero,
+              AddressZero,
               tokenId,
-              supportMultipleUsers,
+              roleCreator.address,
+              userOne.address,
             ),
           ).to.be.equal(false)
         })
       })
 
-      describe('Multiple Users Roles', async () => {
-        const supportMultipleUsers = nftMetadata.roles.find(
-          (role: any) => role.name === 'PROPERTY_TENANT',
-        )?.supportsMultipleAssignments
-
+      describe('Non-Unique Roles', async () => {
         it('should return true for all users', async () => {
           expect(
             await ERC7432.hasRole(
-              PROPERTY_TENANT,
-                           AddressZero,
-              tokenId, roleCreator.address,
+              PROPERTY_MANAGER,
+              AddressZero,
+              tokenId, 
+              roleCreator.address,
               userOne.address,
-              supportMultipleUsers,
             ),
           ).to.be.equal(true)
 
           expect(
             await ERC7432.hasRole(
-              PROPERTY_TENANT,
+              PROPERTY_MANAGER,
               AddressZero,
               tokenId, 
               roleCreator.address,
-              userOne.address,
-              supportMultipleUsers,
+              userTwo.address,
             ),
           ).to.be.equal(true)
         })
@@ -227,7 +217,6 @@ roleCreator.address,
               tokenId, 
               roleCreator.address,
               userOne.address,
-              supportMultipleUsers,
             ),
           ).to.be.equal(false)
 
@@ -237,8 +226,7 @@ roleCreator.address,
               AddressZero,
               tokenId, 
               roleCreator.address,
-              userOne.address,
-              supportMultipleUsers,
+              userTwo.address,
             ),
           ).to.be.equal(false)
         })
