@@ -17,9 +17,10 @@ describe('ERC7432', () => {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let deployer: SignerWithAddress
-  let roleCreator: SignerWithAddress
+  let grantor: SignerWithAddress
   let userOne: SignerWithAddress
   let userTwo: SignerWithAddress
+  let operator: SignerWithAddress
 
   const PROPERTY_MANAGER = solidityKeccak256(['string'], ['PROPERTY_MANAGER'])
   const PROPERTY_TENANT = solidityKeccak256(['string'], ['PROPERTY_TENANT'])
@@ -28,7 +29,7 @@ describe('ERC7432', () => {
 
   before(async function () {
     // prettier-ignore
-    [deployer, roleCreator, userOne, userTwo] = await ethers.getSigners()
+    [deployer, grantor, userOne, userTwo, operator] = await ethers.getSigners()
 
     const metadata: NftMetadata = {
       name: 'Nft name',
@@ -99,12 +100,17 @@ describe('ERC7432', () => {
     describe('Grant role', async () => {
       it('should grant role', async () => {
         await expect(
-          ERC7432
-            .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, data),
+          ERC7432.connect(grantor).grantRole(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            userOne.address,
+            expirationDate,
+            data,
+          ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, data)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, data)
       })
       it('should NOT grant role if expiration date is in the past', async () => {
         const blockNumber = await hre.ethers.provider.getBlockNumber()
@@ -112,60 +118,63 @@ describe('ERC7432', () => {
         const expirationDateInThePast = block.timestamp - ONE_DAY
 
         await expect(
-          ERC7432
-            .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDateInThePast, HashZero),
+          ERC7432.connect(grantor).grantRole(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            userOne.address,
+            expirationDateInThePast,
+            HashZero,
+          ),
         ).to.be.revertedWith('ERC7432: expiration date must be in the future')
       })
     })
 
     describe('Revoke role', async () => {
       it('should revoke role', async () => {
-        await expect(ERC7432.connect(roleCreator).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address))
+        await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address))
           .to.emit(ERC7432, 'RoleRevoked')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
       })
     })
 
     describe('Has role', async () => {
       beforeEach(async () => {
         await expect(
-          ERC7432
-            .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, HashZero),
+          ERC7432.connect(grantor).grantRole(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            userOne.address,
+            expirationDate,
+            HashZero,
+          ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, HashZero)
 
         await expect(
-          ERC7432
-            .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userTwo.address, expirationDate, HashZero),
+          ERC7432.connect(grantor).grantRole(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            userTwo.address,
+            expirationDate,
+            HashZero,
+          ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userTwo.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address, expirationDate, HashZero)
       })
 
       describe('Unique Roles', async () => {
         it('should return true for the last user granted, and false for the others', async () => {
           expect(
-            await ERC7432.hasUniqueRole(
-              PROPERTY_MANAGER,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userOne.address,
-            ),
+            await ERC7432.hasUniqueRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
           ).to.be.equal(false)
 
           expect(
-            await ERC7432.hasUniqueRole(
-              PROPERTY_MANAGER,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userTwo.address,
-            ),
+            await ERC7432.hasUniqueRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address),
           ).to.be.equal(true)
         })
         it('should NOT return true for the last user if role is expired', async () => {
@@ -173,13 +182,7 @@ describe('ERC7432', () => {
           await hre.ethers.provider.send('evm_mine', [])
 
           expect(
-            await ERC7432.hasUniqueRole(
-              PROPERTY_MANAGER,
-              AddressZero,
-              tokenId,
-              roleCreator.address,
-              userOne.address,
-            ),
+            await ERC7432.hasUniqueRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
           ).to.be.equal(false)
         })
       })
@@ -187,23 +190,11 @@ describe('ERC7432', () => {
       describe('Non-Unique Roles', async () => {
         it('should return true for all users', async () => {
           expect(
-            await ERC7432.hasRole(
-              PROPERTY_MANAGER,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userOne.address,
-            ),
+            await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
           ).to.be.equal(true)
 
           expect(
-            await ERC7432.hasRole(
-              PROPERTY_MANAGER,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userTwo.address,
-            ),
+            await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address),
           ).to.be.equal(true)
         })
         it("should NOT return true for all users if role is expired'", async () => {
@@ -211,23 +202,11 @@ describe('ERC7432', () => {
           await hre.ethers.provider.send('evm_mine', [])
 
           expect(
-            await ERC7432.hasRole(
-              PROPERTY_TENANT,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userOne.address,
-            ),
+            await ERC7432.hasRole(PROPERTY_TENANT, AddressZero, tokenId, grantor.address, userOne.address),
           ).to.be.equal(false)
 
           expect(
-            await ERC7432.hasRole(
-              PROPERTY_TENANT,
-              AddressZero,
-              tokenId, 
-              roleCreator.address,
-              userTwo.address,
-            ),
+            await ERC7432.hasRole(PROPERTY_TENANT, AddressZero, tokenId, grantor.address, userTwo.address),
           ).to.be.equal(false)
         })
       })
@@ -249,26 +228,39 @@ describe('ERC7432', () => {
         const customData = defaultAbiCoder.encode(['(uint256 eventId,uint256[] split)[]'], [profitSplit])
 
         await expect(
-          ERC7432
-            .connect(roleCreator)
-            .grantRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, customData),
+          ERC7432.connect(grantor).grantRole(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            userOne.address,
+            expirationDate,
+            customData,
+          ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address, expirationDate, customData)
+          .withArgs(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            grantor.address,
+            userOne.address,
+            expirationDate,
+            customData,
+          )
 
         const returnedData = await ERC7432.roleData(
           PROPERTY_MANAGER,
           AddressZero,
-          tokenId, 
-          roleCreator.address,
+          tokenId,
+          grantor.address,
           userOne.address,
         )
 
         const returnedExpirationDate = await ERC7432.roleExpirationDate(
           PROPERTY_MANAGER,
           AddressZero,
-          tokenId, 
-          roleCreator.address,
+          tokenId,
+          grantor.address,
           userOne.address,
         )
 
@@ -293,15 +285,20 @@ describe('ERC7432', () => {
         const rentalCost = ethers.utils.parseEther('1.5')
         const customData = defaultAbiCoder.encode(['uint256'], [rentalCost])
 
-        await ERC7432
-          .connect(roleCreator)
-          .grantRole(PROPERTY_TENANT, AddressZero, tokenId, userOne.address, expirationDate, customData)
+        await ERC7432.connect(grantor).grantRole(
+          PROPERTY_TENANT,
+          AddressZero,
+          tokenId,
+          userOne.address,
+          expirationDate,
+          customData,
+        )
 
         const returnedData = await ERC7432.roleData(
           PROPERTY_TENANT,
           AddressZero,
-          tokenId, 
-          roleCreator.address,
+          tokenId,
+          grantor.address,
           userOne.address,
         )
 
@@ -317,6 +314,97 @@ describe('ERC7432', () => {
       it(`should return true for IERC7432 interface id (${ERC7432InterfaceId})`, async function () {
         expect(await ERC7432.supportsInterface(ERC7432InterfaceId)).to.be.true
       })
+    })
+
+    describe('Approvals', async () => {
+      const approvals = ['Approval for TokenId', 'Approval for All']
+      for (const approval of approvals) {
+        describe(approval, async () => {
+          beforeEach(async () => {
+            if (approval === 'Approval for TokenId') {
+              await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, true)
+            } else {
+              await ERC7432.connect(grantor).setRoleApprovalForAll(AddressZero, operator.address, true)
+            }
+          })
+          describe('Grant role from', async () => {
+            it('should grant role from', async () => {
+              await expect(
+                ERC7432.connect(operator).grantRoleFrom(
+                  PROPERTY_MANAGER,
+                  AddressZero,
+                  tokenId,
+                  grantor.address,
+                  userOne.address,
+                  expirationDate,
+                  HashZero,
+                ),
+              )
+                .to.emit(ERC7432, 'RoleGranted')
+                .withArgs(
+                  PROPERTY_MANAGER,
+                  AddressZero,
+                  tokenId,
+                  grantor.address,
+                  userOne.address,
+                  expirationDate,
+                  HashZero,
+                )
+            })
+            it('should NOT grant role from if operator is not approved', async () => {
+              if (approval === 'Approval for TokenId') {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
+              } else {
+                await ERC7432.connect(grantor).setRoleApprovalForAll(AddressZero, operator.address, false)
+              }
+
+              await expect(
+                ERC7432.connect(operator).grantRoleFrom(
+                  PROPERTY_MANAGER,
+                  AddressZero,
+                  tokenId,
+                  grantor.address,
+                  userOne.address,
+                  expirationDate,
+                  HashZero,
+                ),
+              ).to.be.revertedWith('ERC7432: sender must be approved')
+            })
+          })
+
+          describe('Revoke role from', async () => {
+            it('should revoke role from', async () => {
+              await expect(
+                ERC7432.connect(operator).revokeRoleFrom(
+                  PROPERTY_MANAGER,
+                  AddressZero,
+                  tokenId,
+                  grantor.address,
+                  userOne.address,
+                ),
+              )
+                .to.emit(ERC7432, 'RoleRevoked')
+                .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+            })
+            it('should NOT revoke role from if operator is not approved', async () => {
+              if (approval === 'Approval for TokenId') {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
+              } else {
+                await ERC7432.connect(grantor).setRoleApprovalForAll(AddressZero, operator.address, false)
+              }
+              await expect(
+                ERC7432.connect(operator).revokeRoleFrom(
+                  PROPERTY_MANAGER,
+                  AddressZero,
+                  tokenId,
+                  grantor.address,
+                  userOne.address,
+                ),
+              ).to.be.revertedWith('ERC7432: sender must be approved')
+            })
+          })
+        })
+      }
     })
   })
 })
