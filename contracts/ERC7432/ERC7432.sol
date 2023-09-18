@@ -108,8 +108,7 @@ contract ERC7432 is IERC7432 {
         address _grantor,
         address _grantee
     ) external view returns (bool) {
-        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId]
-            [_role].expirationDate > block.timestamp;
+        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate > block.timestamp;
     }
 
     function hasUniqueRole(
