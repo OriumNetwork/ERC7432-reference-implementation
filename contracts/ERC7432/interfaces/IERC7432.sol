@@ -23,6 +23,7 @@ interface IERC7432 is IERC165 {
     /// @param _grantor The user assigning the role.
     /// @param _grantee The user receiving the role.
     /// @param _expirationDate The expiration date of the role.
+    /// @param _revocable Whether the role is revocable or not.
     /// @param _data Any additional data about the role.
     event RoleGranted(
         bytes32 indexed _role,
@@ -31,6 +32,7 @@ interface IERC7432 is IERC165 {
         address _grantor,
         address _grantee,
         uint64 _expirationDate,
+        bool _revocable,
         bytes _data
     );
 

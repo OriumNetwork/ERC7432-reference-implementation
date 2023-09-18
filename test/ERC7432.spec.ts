@@ -26,6 +26,7 @@ describe('ERC7432', () => {
   const PROPERTY_TENANT = solidityKeccak256(['string'], ['PROPERTY_TENANT'])
 
   const tokenId = 1
+  const revokable = true
 
   before(async function () {
     // prettier-ignore
@@ -106,12 +107,12 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            true,
+            revokable,
             data,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, data)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, revokable, data)
       })
       it('should NOT grant role if expiration date is in the past', async () => {
         const blockNumber = await hre.ethers.provider.getBlockNumber()
@@ -125,7 +126,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDateInThePast,
-            true,
+            revokable,
             HashZero,
           ),
         ).to.be.revertedWith('ERC7432: expiration date must be in the future')
@@ -140,7 +141,7 @@ describe('ERC7432', () => {
           tokenId,
           userOne.address,
           expirationDate,
-          true,
+          revokable,
           data,
         )
       })
@@ -180,7 +181,7 @@ describe('ERC7432', () => {
         )
         await expect(
           ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address),
-        ).to.be.revertedWith('ERC7432: role is not revocable')
+        ).to.be.revertedWith(`ERC7432: Account can't revoke this role`)
       })
     })
 
@@ -193,12 +194,12 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            true,
+            revokable,
             HashZero,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, revokable, HashZero)
 
         await expect(
           ERC7432.connect(grantor).grantRole(
@@ -207,12 +208,12 @@ describe('ERC7432', () => {
             tokenId,
             userTwo.address,
             expirationDate,
-            true,
+            revokable,
             HashZero,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address, expirationDate, HashZero)
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address, expirationDate, revokable, HashZero)
       })
 
       describe('Unique Roles', async () => {
@@ -282,7 +283,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            true,
+            revokable,
             customData,
           ),
         )
@@ -294,6 +295,7 @@ describe('ERC7432', () => {
             grantor.address,
             userOne.address,
             expirationDate,
+            revokable,
             customData,
           )
 
@@ -340,7 +342,7 @@ describe('ERC7432', () => {
           tokenId,
           userOne.address,
           expirationDate,
-          true,
+          revokable,
           customData,
         )
 
@@ -387,7 +389,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
-                  true,
+                  revokable,
                   HashZero,
                 ),
               )
@@ -399,6 +401,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
+                  revokable,
                   HashZero,
                 )
             })
@@ -417,7 +420,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
-                  true,
+                  revokable,
                   HashZero,
                 ),
               ).to.be.revertedWith('ERC7432: sender must be approved')
@@ -433,7 +436,7 @@ describe('ERC7432', () => {
                 grantor.address,
                 userOne.address,
                 expirationDate,
-                true,
+                revokable,
                 HashZero,
               )
             })
