@@ -54,16 +54,7 @@ contract ERC7432 is IERC7432 {
         bool _revocable,
         bytes calldata _data
     ) external override onlyApproved(_tokenAddress, _tokenId, _grantor) {
-        _grantRole(
-            _role,
-            _tokenAddress,
-            _tokenId,
-            _grantor,
-            _grantee,
-            _expirationDate,
-            _revocable,
-            _data
-        );
+        _grantRole(_role, _tokenAddress, _tokenId, _grantor, _grantee, _expirationDate, _revocable, _data);
     }
 
     function _grantRole(
