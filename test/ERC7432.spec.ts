@@ -8,7 +8,7 @@ import axios from 'axios'
 import { defaultAbiCoder, solidityKeccak256 } from 'ethers/lib/utils'
 import { NftMetadata, Role } from './types'
 
-const { HashZero, AddressZero } = ethers.constants
+const {HashZero, AddressZero} = ethers.constants
 const ONE_DAY = 60 * 60 * 24
 
 describe('ERC7432', () => {
@@ -106,6 +106,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
+            true,
             data,
           ),
         )
@@ -124,6 +125,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDateInThePast,
+            true,
             HashZero,
           ),
         ).to.be.revertedWith('ERC7432: expiration date must be in the future')
@@ -131,10 +133,35 @@ describe('ERC7432', () => {
     })
 
     describe('Revoke role', async () => {
+      beforeEach(async () => {
+        await ERC7432.connect(grantor).grantRole(
+          PROPERTY_MANAGER,
+          AddressZero,
+          tokenId,
+          userOne.address,
+          expirationDate,
+          true,
+          data,
+        )
+      })
       it('should revoke role', async () => {
         await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address))
           .to.emit(ERC7432, 'RoleRevoked')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+      })
+      it('should NOT revoke role if role is not revocable', async () => {
+        await ERC7432.connect(grantor).grantRole(
+          PROPERTY_MANAGER,
+          AddressZero,
+          tokenId,
+          userOne.address,
+          expirationDate,
+          false,
+          data,
+        )
+        await expect(
+          ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address),
+        ).to.be.revertedWith('ERC7432: role is not revocable')
       })
     })
 
@@ -147,6 +174,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
+            true,
             HashZero,
           ),
         )
@@ -160,6 +188,7 @@ describe('ERC7432', () => {
             tokenId,
             userTwo.address,
             expirationDate,
+            true,
             HashZero,
           ),
         )
@@ -234,6 +263,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
+            true,
             customData,
           ),
         )
@@ -291,6 +321,7 @@ describe('ERC7432', () => {
           tokenId,
           userOne.address,
           expirationDate,
+          true,
           customData,
         )
 
@@ -337,6 +368,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
+                  true,
                   HashZero,
                 ),
               )
@@ -366,6 +398,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
+                  true,
                   HashZero,
                 ),
               ).to.be.revertedWith('ERC7432: sender must be approved')
@@ -373,6 +406,18 @@ describe('ERC7432', () => {
           })
 
           describe('Revoke role from', async () => {
+            beforeEach(async () => {
+              await ERC7432.connect(operator).grantRoleFrom(
+                PROPERTY_MANAGER,
+                AddressZero,
+                tokenId,
+                grantor.address,
+                userOne.address,
+                expirationDate,
+                true,
+                HashZero,
+              )
+            })
             it('should revoke role from', async () => {
               await expect(
                 ERC7432.connect(operator).revokeRoleFrom(

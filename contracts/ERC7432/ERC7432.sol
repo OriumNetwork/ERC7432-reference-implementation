@@ -136,11 +136,8 @@ contract ERC7432 is IERC7432 {
         address _revoker,
         address _grantee
     ) internal {
-        require(
-            roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role]
-                .revocable || msg.sender == _grantee,
-            "ERC7432: role is not revocable"
-        );
+        bool _isRevocable = roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role].revocable;
+        require(_isRevocable || msg.sender == _grantee, "ERC7432: role is not revocable");
         delete roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][
             _role
         ];
