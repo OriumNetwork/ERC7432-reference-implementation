@@ -18,8 +18,7 @@ contract ERC7432 is IERC7432 {
     mapping(address => mapping(address => mapping(address => bool))) public tokenApprovals;
 
     modifier validExpirationDate(uint64 _expirationDate) {
-        require(
-            _expirationDate > block.timestamp, "ERC7432: expiration date must be in the future");
+        require(_expirationDate > block.timestamp, "ERC7432: expiration date must be in the future");
         _;
     }
 
@@ -41,16 +40,7 @@ contract ERC7432 is IERC7432 {
         bool _revocable,
         bytes calldata _data
     ) external {
-        _grantRole(
-            _role,
-            _tokenAddress,
-            _tokenId,
-            msg.sender,
-            _grantee,
-            _expirationDate,
-            _revocable,
-            _data
-        );
+        _grantRole(_role, _tokenAddress, _tokenId, msg.sender, _grantee, _expirationDate, _revocable, _data);
     }
 
     function grantRoleFrom(
@@ -87,15 +77,7 @@ contract ERC7432 is IERC7432 {
     ) internal validExpirationDate(_expirationDate) {
         roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role] = RoleData(_expirationDate, _revocable, _data);
         latestGrantees[_grantor][_tokenAddress][_tokenId][_role] = _grantee;
-        emit RoleGranted(
-            _role,
-            _tokenAddress,
-            _tokenId,
-            _grantor,
-            _grantee,
-            _expirationDate,
-            _data
-        );
+        emit RoleGranted(_role, _tokenAddress, _tokenId, _grantor, _grantee, _expirationDate, _data);
     }
 
     function revokeRole(bytes32 _role, address _tokenAddress, uint256 _tokenId, address _grantee) external {
@@ -122,9 +104,7 @@ contract ERC7432 is IERC7432 {
     ) internal {
         bool _isRevocable = roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role].revocable;
         require(_isRevocable || _caller == _grantee, "ERC7432: role is not revocable");
-        delete roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][
-            _role
-        ];
+        delete roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role];
         delete latestGrantees[_revoker][_tokenAddress][_tokenId][_role];
         emit RoleRevoked(_role, _tokenAddress, _tokenId, _revoker, _grantee);
     }
@@ -136,7 +116,8 @@ contract ERC7432 is IERC7432 {
         address _grantor,
         address _grantee
     ) external view returns (bool) {
-        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate > block.timestamp;
+        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role]
+            .expirationDate > block.timestamp;
     }
 
     function hasUniqueRole(
