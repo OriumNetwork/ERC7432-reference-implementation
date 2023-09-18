@@ -8,7 +8,7 @@ import axios from 'axios'
 import { defaultAbiCoder, solidityKeccak256 } from 'ethers/lib/utils'
 import { NftMetadata, Role } from './types'
 
-const {HashZero, AddressZero} = ethers.constants
+const { HashZero, AddressZero } = ethers.constants
 const ONE_DAY = 60 * 60 * 24
 
 describe('ERC7432', () => {
