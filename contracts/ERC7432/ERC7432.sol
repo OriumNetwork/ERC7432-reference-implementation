@@ -9,7 +9,7 @@ contract ERC7432 is IERC7432 {
     mapping(address => mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => RoleData)))))
         public roleAssignments;
 
-    // grantor => tokenAddress => tokenId => role => grantees
+    // grantor => tokenAddress => tokenId => role => grantee
     mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => address)))) public latestGrantees;
 
     // grantor => tokenAddress => tokenId => operator => isApproved
