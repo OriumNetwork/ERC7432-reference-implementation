@@ -10,16 +10,13 @@ contract ERC7432 is IERC7432 {
         public roleAssignments;
 
     // grantor => tokenAddress => tokenId => role => grantees
-    mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => address))))
-        public latestGrantees;
+    mapping(address => mapping(address => mapping(uint256 => mapping(bytes32 => address)))) public latestGrantees;
 
     // grantor => tokenAddress => tokenId => operator => isApproved
-    mapping(address => mapping(address => mapping(uint256 => mapping(address => bool))))
-        public tokenIdApprovals;
+    mapping(address => mapping(address => mapping(uint256 => mapping(address => bool)))) public tokenIdApprovals;
 
     // grantor => operator => tokenAddress => isApproved
-    mapping(address => mapping(address => mapping(address => bool)))
-        public tokenApprovals;
+    mapping(address => mapping(address => mapping(address => bool))) public tokenApprovals;
 
     modifier validExpirationDate(uint64 _expirationDate) {
         require(_expirationDate > block.timestamp, "ERC7432: expiration date must be in the future");
