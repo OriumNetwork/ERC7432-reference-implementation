@@ -471,6 +471,7 @@ describe('ERC7432', () => {
               ).to.be.revertedWith('ERC7432: sender must be approved')
             })
             it('should revoke role from if operator is approved by grantee', async () => {
+              await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
               await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
               expect(await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)).to.be.equal(true)
               await expect(
