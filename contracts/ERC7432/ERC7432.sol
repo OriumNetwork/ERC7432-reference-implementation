@@ -82,8 +82,14 @@ contract ERC7432 is IERC7432 {
         uint256 _tokenId,
         address _revoker,
         address _grantee
-    ) external override onlyApproved(_tokenAddress, _tokenId, _revoker) {
-        _revokeRole(_role, _tokenAddress, _tokenId, _revoker, _grantee, _grantee);
+    ) external override {
+        bool _isRevokerApproved = isRoleApprovedForAll(_tokenAddress, _revoker, msg.sender) || getApprovedRole(_tokenAddress, _tokenId, _revoker, msg.sender);
+        bool _isGranteeApproved = isRoleApprovedForAll(_tokenAddress, _grantee, msg.sender) || getApprovedRole(_tokenAddress, _tokenId, _grantee, msg.sender);
+        require(_isRevokerApproved || _isGranteeApproved, "ERC7432: sender must be approved");
+
+        address _caller = _isGranteeApproved ? _grantee : _revoker; // In case of operator being approved for both grantee and revoker, the grantee will be the caller.
+
+        _revokeRole(_role, _tokenAddress, _tokenId, _revoker, _grantee, _caller);
     }
 
     function _revokeRole(
