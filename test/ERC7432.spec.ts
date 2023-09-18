@@ -149,6 +149,25 @@ describe('ERC7432', () => {
           .to.emit(ERC7432, 'RoleRevoked')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
       })
+      it("should revoke role if caller is the grantee", async () => {
+        await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address))
+          .to.emit(ERC7432, 'RoleRevoked')
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+      })
+      it('should revoke role if role is not revocable, but grantor is also the grantee', async () => {
+        await ERC7432.connect(grantor).grantRole(
+          PROPERTY_MANAGER,
+          AddressZero,
+          tokenId,
+          grantor.address,
+          expirationDate,
+          false,
+          data,
+        )
+        await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address))
+          .to.emit(ERC7432, 'RoleRevoked')
+          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, grantor.address)
+      })
       it('should NOT revoke role if role is not revocable', async () => {
         await ERC7432.connect(grantor).grantRole(
           PROPERTY_MANAGER,

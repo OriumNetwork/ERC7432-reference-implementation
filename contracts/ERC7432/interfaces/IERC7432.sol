@@ -6,7 +6,7 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
 
 /// @title ERC-7432 Non-Fungible Token Roles
 /// @dev See https://eips.ethereum.org/EIPS/eip-7432
-/// Note: the ERC-165 identifier for this interface is 0xd7e151ef.
+/// Note: the ERC-165 identifier for this interface is 0x25be10b2.
 interface IERC7432 is IERC165 {
     struct RoleData {
         uint64 expirationDate;
