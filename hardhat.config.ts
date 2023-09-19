@@ -1,6 +1,7 @@
 import 'solidity-coverage'
 import 'hardhat-spdx-license-identifier'
 import '@nomicfoundation/hardhat-toolbox'
+import 'hardhat-gas-reporter'
 
 module.exports = {
   solidity: {
@@ -9,6 +10,13 @@ module.exports = {
       enabled: true,
       runs: 200,
     },
+  },
+  gasReporter: {
+    enabled: true,
+    excludeContracts: ['contracts/test'],
+    gasPrice: 100,
+    token: 'MATIC',
+    currency: 'USD',
   },
   mocha: {
     timeout: 840000,

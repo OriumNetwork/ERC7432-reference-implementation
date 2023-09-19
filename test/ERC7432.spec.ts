@@ -193,7 +193,7 @@ describe('ERC7432', () => {
         )
         await expect(
           ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address),
-        ).to.be.revertedWith(`ERC7432: Account can't revoke this role`)
+        ).to.be.revertedWith(`ERC7432: Role is not revocable or caller is not the grantee`)
       })
     })
 
@@ -628,7 +628,7 @@ describe('ERC7432', () => {
                     grantor.address,
                     userOne.address,
                   ),
-                ).to.be.revertedWith(`ERC7432: Account can't revoke this role`)
+                ).to.be.revertedWith(`ERC7432: Role is not revocable or caller is not the grantee`)
               })
             })
           })
