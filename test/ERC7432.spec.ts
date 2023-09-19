@@ -1,14 +1,14 @@
-import hre, { ethers } from 'hardhat'
-import { Contract } from 'ethers'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { expect } from 'chai'
-import { ERC7432InterfaceId } from './contants'
+import hre, {ethers} from 'hardhat'
+import {Contract} from 'ethers'
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers'
+import {expect} from 'chai'
+import {ERC7432InterfaceId} from './contants'
 import nock from 'nock'
 import axios from 'axios'
-import { defaultAbiCoder, solidityKeccak256 } from 'ethers/lib/utils'
-import { NftMetadata, Role } from './types'
+import {defaultAbiCoder, solidityKeccak256} from 'ethers/lib/utils'
+import {NftMetadata, Role} from './types'
 
-const { HashZero, AddressZero } = ethers.constants
+const {HashZero, AddressZero} = ethers.constants
 const ONE_DAY = 60 * 60 * 24
 
 describe('ERC7432', () => {
@@ -26,7 +26,7 @@ describe('ERC7432', () => {
   const PROPERTY_TENANT = solidityKeccak256(['string'], ['PROPERTY_TENANT'])
 
   const tokenId = 1
-  const revokable = true
+  const revocable = true
 
   before(async function () {
     // prettier-ignore
@@ -107,12 +107,21 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            revokable,
+            revocable,
             data,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, revokable, data)
+          .withArgs(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            grantor.address,
+            userOne.address,
+            expirationDate,
+            revocable,
+            data,
+          )
       })
       it('should NOT grant role if expiration date is in the past', async () => {
         const blockNumber = await hre.ethers.provider.getBlockNumber()
@@ -126,7 +135,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDateInThePast,
-            revokable,
+            revocable,
             HashZero,
           ),
         ).to.be.revertedWith('ERC7432: expiration date must be in the future')
@@ -141,7 +150,7 @@ describe('ERC7432', () => {
           tokenId,
           userOne.address,
           expirationDate,
-          revokable,
+          revocable,
           data,
         )
       })
@@ -150,7 +159,7 @@ describe('ERC7432', () => {
           .to.emit(ERC7432, 'RoleRevoked')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
       })
-      it("should revoke role if caller is the grantee", async () => {
+      it('should revoke role if caller is the grantee', async () => {
         await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, userOne.address))
           .to.emit(ERC7432, 'RoleRevoked')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
@@ -168,7 +177,9 @@ describe('ERC7432', () => {
         await expect(ERC7432.connect(grantor).revokeRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address))
           .to.emit(ERC7432, 'RoleRevoked')
           .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, grantor.address)
-        expect(await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, grantor.address)).to.be.equal(false)
+        expect(
+          await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, grantor.address),
+        ).to.be.equal(false)
       })
       it('should NOT revoke role if role is not revocable', async () => {
         await ERC7432.connect(grantor).grantRole(
@@ -195,12 +206,21 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            revokable,
+            revocable,
             HashZero,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address, expirationDate, revokable, HashZero)
+          .withArgs(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            grantor.address,
+            userOne.address,
+            expirationDate,
+            revocable,
+            HashZero,
+          )
 
         await expect(
           ERC7432.connect(grantor).grantRole(
@@ -209,12 +229,21 @@ describe('ERC7432', () => {
             tokenId,
             userTwo.address,
             expirationDate,
-            revokable,
+            revocable,
             HashZero,
           ),
         )
           .to.emit(ERC7432, 'RoleGranted')
-          .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userTwo.address, expirationDate, revokable, HashZero)
+          .withArgs(
+            PROPERTY_MANAGER,
+            AddressZero,
+            tokenId,
+            grantor.address,
+            userTwo.address,
+            expirationDate,
+            revocable,
+            HashZero,
+          )
       })
 
       describe('Unique Roles', async () => {
@@ -284,7 +313,7 @@ describe('ERC7432', () => {
             tokenId,
             userOne.address,
             expirationDate,
-            revokable,
+            revocable,
             customData,
           ),
         )
@@ -296,7 +325,7 @@ describe('ERC7432', () => {
             grantor.address,
             userOne.address,
             expirationDate,
-            revokable,
+            revocable,
             customData,
           )
 
@@ -343,7 +372,7 @@ describe('ERC7432', () => {
           tokenId,
           userOne.address,
           expirationDate,
-          revokable,
+          revocable,
           customData,
         )
 
@@ -390,7 +419,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
-                  revokable,
+                  revocable,
                   HashZero,
                 ),
               )
@@ -402,7 +431,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
-                  revokable,
+                  revocable,
                   HashZero,
                 )
             })
@@ -421,7 +450,7 @@ describe('ERC7432', () => {
                   grantor.address,
                   userOne.address,
                   expirationDate,
-                  revokable,
+                  revocable,
                   HashZero,
                 ),
               ).to.be.revertedWith('ERC7432: sender must be approved')
@@ -429,63 +458,178 @@ describe('ERC7432', () => {
           })
 
           describe('Revoke role from', async () => {
-            beforeEach(async () => {
-              await ERC7432.connect(operator).grantRoleFrom(
-                PROPERTY_MANAGER,
-                AddressZero,
-                tokenId,
-                grantor.address,
-                userOne.address,
-                expirationDate,
-                revokable,
-                HashZero,
-              )
-            })
-            it('should revoke role from', async () => {
-              await expect(
-                ERC7432.connect(operator).revokeRoleFrom(
+            describe('Revocable roles', async () => {
+              beforeEach(async () => {
+                await ERC7432.connect(operator).grantRoleFrom(
                   PROPERTY_MANAGER,
                   AddressZero,
                   tokenId,
                   grantor.address,
                   userOne.address,
-                ),
-              )
-                .to.emit(ERC7432, 'RoleRevoked')
-                .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
-            })
-            it('should NOT revoke role from if operator is not approved', async () => {
-              if (approval === 'Approval for TokenId') {
+                  expirationDate,
+                  revocable,
+                  HashZero,
+                )
+              })
+              it('should revoke role from', async () => {
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+              })
+              it('should NOT revoke role from if operator is not approved', async () => {
+                if (approval === 'Approval for TokenId') {
+                  await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
+                } else {
+                  await ERC7432.connect(grantor).setRoleApprovalForAll(AddressZero, operator.address, false)
+                }
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                ).to.be.revertedWith('ERC7432: sender must be approved')
+              })
+              it('should revoke role from if operator is only approved by grantee', async () => {
                 await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
-              } else {
-                await ERC7432.connect(grantor).setRoleApprovalForAll(AddressZero, operator.address, false)
-              }
-              await expect(
-                ERC7432.connect(operator).revokeRoleFrom(
-                  PROPERTY_MANAGER,
-                  AddressZero,
-                  tokenId,
-                  grantor.address,
-                  userOne.address,
-                ),
-              ).to.be.revertedWith('ERC7432: sender must be approved')
+                await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(false)
+              })
+              it('should revoke role from if operator is approved by both grantor and grantee', async () => {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, true)
+                await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(false)
+              })
+              it('should revoke role from if operator is only approved by grantor', async () => {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, true)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(false)
+              })
             })
-            it('should revoke role from if operator is approved by grantee', async () => {
-              await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
-              await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
-              expect(await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)).to.be.equal(true)
-              await expect(
-                ERC7432.connect(operator).revokeRoleFrom(
+            describe('Non-Revocable roles', async () => {
+              beforeEach(async () => {
+                await ERC7432.connect(operator).grantRoleFrom(
                   PROPERTY_MANAGER,
                   AddressZero,
                   tokenId,
                   grantor.address,
                   userOne.address,
-                ),
-              )
-                .to.emit(ERC7432, 'RoleRevoked')
-                .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
-              expect(await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)).to.be.equal(false)
+                  expirationDate,
+                  !revocable,
+                  HashZero,
+                )
+              })
+              it('should revoke role from if operator is only approved by grantee', async () => {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, false)
+                await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(false)
+              })
+              it('should revoke role from if operator is approved by both grantor and grantee', async () => {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, true)
+                await ERC7432.connect(userOne).approveRole(AddressZero, tokenId, operator.address, true)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                )
+                  .to.emit(ERC7432, 'RoleRevoked')
+                  .withArgs(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address)
+                expect(
+                  await ERC7432.hasRole(PROPERTY_MANAGER, AddressZero, tokenId, grantor.address, userOne.address),
+                ).to.be.equal(false)
+              })
+              it('should NOT revoke role from if operator is only approved by grantor', async () => {
+                await ERC7432.connect(grantor).approveRole(AddressZero, tokenId, operator.address, true)
+                await expect(
+                  ERC7432.connect(operator).revokeRoleFrom(
+                    PROPERTY_MANAGER,
+                    AddressZero,
+                    tokenId,
+                    grantor.address,
+                    userOne.address,
+                  ),
+                ).to.be.revertedWith(`ERC7432: Account can't revoke this role`)
+              })
             })
           })
         })
