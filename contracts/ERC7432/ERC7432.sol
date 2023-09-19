@@ -23,9 +23,9 @@ contract ERC7432 is IERC7432 {
         _;
     }
 
-    modifier onlyApproved(address _tokenAddress, uint256 _tokenId, address _grantor) {
+    modifier onlyApproved(address _tokenAddress, uint256 _tokenId, address _account) {
         require(
-            _isRoleApproved(_tokenAddress, _tokenId, _grantor, msg.sender),
+            _isRoleApproved(_tokenAddress, _tokenId, _account, msg.sender),
             "ERC7432: sender must be approved"
         );
         _;
@@ -82,13 +82,18 @@ contract ERC7432 is IERC7432 {
         address _revoker,
         address _grantee
     ) external override {
-        bool _isRevokerApproved = _isRoleApproved(_tokenAddress, _tokenId, _revoker, msg.sender);
-        bool _isGranteeApproved = _isRoleApproved(_tokenAddress, _tokenId, _grantee, msg.sender);
-        require(_isRevokerApproved || _isGranteeApproved, "ERC7432: sender must be approved");
-
-        address _caller = _isGranteeApproved ? _grantee : _revoker; // In case of operator being approved for both grantee and revoker, the grantee will be the caller.
-
+        address _caller = _getApprovedCaller(_tokenAddress, _tokenId, _revoker, _grantee);
         _revokeRole(_role, _tokenAddress, _tokenId, _revoker, _grantee, _caller);
+    }
+
+    function _getApprovedCaller(address _tokenAddress, uint256 _tokenId, address _revoker, address _grantee) internal view returns (address) {
+        if(_isRoleApproved(_tokenAddress, _tokenId, _grantee, msg.sender)){
+            return _grantee;
+        } else if(_isRoleApproved(_tokenAddress, _tokenId, _revoker, msg.sender)){
+            return _revoker;
+        } else {
+            revert("ERC7432: sender must be approved");
+        }
     }
 
     function _revokeRole(
