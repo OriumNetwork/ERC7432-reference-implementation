@@ -13,7 +13,7 @@ module.exports = {
   },
   gasReporter: {
     enabled: true,
-    excludeContracts: ['contracts/test'],
+    excludeContracts: ['contracts/mocks'],
     gasPrice: 100,
     token: 'MATIC',
     currency: 'USD',
