@@ -23,19 +23,19 @@ contract ERC7432 is IERC7432 {
         _;
     }
 
-    modifier onlyApproved(address _tokenAddress, address _account) {
+    modifier onlyAccountOrApproved(address _tokenAddress, address _account) {
         require(
-            isRoleApprovedForAll(_tokenAddress, _account, msg.sender),
+            msg.sender == _account || isRoleApprovedForAll(_tokenAddress, _account, msg.sender),
             "ERC7432: sender must be approved"
         );
         _;
     }
 
-    function grantRevocableRoleFrom(RoleAssignment calldata _roleAssignment) override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) external {
+    function grantRevocableRoleFrom(RoleAssignment calldata _roleAssignment) override onlyAccountOrApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) external {
         _grantRole(_roleAssignment, true);
     }
 
-    function grantRoleFrom(RoleAssignment calldata _roleAssignment) external override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) {
+    function grantRoleFrom(RoleAssignment calldata _roleAssignment) external override onlyAccountOrApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) {
         _grantRole(_roleAssignment, false);
     }
 
@@ -60,7 +60,7 @@ contract ERC7432 is IERC7432 {
         address _revoker,
         address _grantee
     ) external override {
-        address _caller = _getApprovedCaller(_tokenAddress, _revoker, _grantee);
+        address _caller = msg.sender == _revoker || msg.sender == _grantee ? msg.sender : _getApprovedCaller(_tokenAddress, _revoker, _grantee);
         _revokeRole(_role, _tokenAddress, _tokenId, _revoker, _grantee, _caller);
     }
 
@@ -115,10 +115,10 @@ contract ERC7432 is IERC7432 {
         uint256 _tokenId,
         address _grantor,
         address _grantee
-    ) external view returns (bytes memory data_) {
-        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
-        return (_roleData.data);
+    ) external view returns (RoleData memory) {
+        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
     }
+
 
     function roleExpirationDate(
         bytes32 _role,
@@ -127,8 +127,7 @@ contract ERC7432 is IERC7432 {
         address _grantor,
         address _grantee
     ) external view returns (uint64 expirationDate_) {
-        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
-        return (_roleData.expirationDate);
+        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate;
     }
 
     function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
@@ -153,10 +152,10 @@ contract ERC7432 is IERC7432 {
     }
 
     function lastGrantee(
-        address _grantor,
+        bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,
-        bytes32 _role
+        address _grantor
     ) public view override returns (address) {
         return latestGrantees[_grantor][_tokenAddress][_tokenId][_role];
     }

@@ -6,7 +6,7 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
 
 /// @title ERC-7432 Non-Fungible Token Roles
 /// @dev See https://eips.ethereum.org/EIPS/eip-7432
-/// Note: the ERC-165 identifier for this interface is 0x25be10b2.
+/// Note: the ERC-165 identifier for this interface is 0x17ef8677.
 interface IERC7432 is IERC165 {
     struct RoleData {
         uint64 expirationDate;
@@ -146,7 +146,7 @@ interface IERC7432 is IERC165 {
         uint256 _tokenId,
         address _grantor,
         address _grantee
-    ) external view returns (bytes memory data_);
+    ) external view returns (RoleData memory data_);
 
     /// @notice Returns the expiration date of a role assignment.
     /// @param _role The role identifier.
@@ -173,14 +173,14 @@ interface IERC7432 is IERC165 {
     ) external view returns (bool);
 
     /// @notice Returns the last grantee of a role.
-    /// @param _grantor The user that granted the role.
+    /// @param _role The role.
     /// @param _tokenAddress The token address.
     /// @param _tokenId The token ID.
-    /// @param _role The role.
+    /// @param _grantor The user that granted the role.
     function lastGrantee(
-        address _grantor,
+        bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,
-        bytes32 _role
+        address _grantor
     ) external view returns (address);
 }
