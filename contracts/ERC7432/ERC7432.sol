@@ -23,115 +23,111 @@ contract ERC7432 is IERC7432 {
         _;
     }
 
-    modifier onlyApproved(
-        address _tokenAddress,
-        uint256 _tokenId,
-        address _account
-    ) {
-        require(isRoleApprovedForAll(_tokenAddress, _account, msg.sender), "ERC7432: sender must be approved");
+    modifier onlyApproved(address _tokenAddress, address _account) {
+        require(
+            isRoleApprovedForAll(_tokenAddress, _account, msg.sender),
+            "ERC7432: sender must be approved"
+        );
         _;
     }
 
-    function grantRoleFrom(
-        RoleAssignment calldata _roleAssignment,
-        bytes calldata _data
-    ) external override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.tokenId, _roleAssignment.grantor) {
-        _grantRole(_roleAssignment, false, _data);
+    function grantRevocableRoleFrom(RoleAssignment calldata _roleAssignment) override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) external {
+        _grantRole(_roleAssignment, true);
     }
 
-    function grantRevocableRoleFrom(
-        RoleAssignment calldata _roleAssignment,
-        bytes calldata _data
-    ) external override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.tokenId, _roleAssignment.grantor) {
-        _grantRole(_roleAssignment, true, _data);
+    function grantRoleFrom(RoleAssignment calldata _roleAssignment) external override onlyApproved(_roleAssignment.tokenAddress, _roleAssignment.grantor) {
+        _grantRole(_roleAssignment, false);
     }
+
 
     function _grantRole(
         RoleAssignment memory _roleAssignment,
-        bool _revocable,
-        bytes calldata _data
+        bool _revocable
     ) internal validExpirationDate(_roleAssignment.expirationDate) {
         roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][_roleAssignment.tokenAddress][
             _roleAssignment.tokenId
-        ][_roleAssignment.role] = RoleData(_roleAssignment.expirationDate, _revocable, _data);
+        ][_roleAssignment.role] = RoleData(_roleAssignment.expirationDate, _revocable, _roleAssignment.data);
         latestGrantees[_roleAssignment.grantor][_roleAssignment.tokenAddress][_roleAssignment.tokenId][
             _roleAssignment.role
         ] = _roleAssignment.grantee;
-        emit RoleGranted(_roleAssignment, _revocable, _data);
+        emit RoleGranted(_roleAssignment.role, _roleAssignment.tokenAddress, _roleAssignment.tokenId, _roleAssignment.grantor, _roleAssignment.grantee, _roleAssignment.expirationDate, _revocable, _roleAssignment.data);
     }
 
-    function revokeRoleFrom(RoleAssignment calldata _roleAssignment) external override {
-        address _caller = _getApprovedCaller(
-            _roleAssignment.tokenAddress,
-            _roleAssignment.grantor,
-            _roleAssignment.grantee
-        );
-        _revokeRole(_roleAssignment, _caller);
-    }
-
-    function _getApprovedCaller(
+    function revokeRoleFrom(
+        bytes32 _role,
         address _tokenAddress,
+        uint256 _tokenId,
         address _revoker,
         address _grantee
-    ) internal view returns (address) {
-        if (isRoleApprovedForAll(_tokenAddress, _grantee, msg.sender)) {
+    ) external override {
+        address _caller = _getApprovedCaller(_tokenAddress, _revoker, _grantee);
+        _revokeRole(_role, _tokenAddress, _tokenId, _revoker, _grantee, _caller);
+    }
+
+    function _getApprovedCaller(address _tokenAddress, address _revoker, address _grantee) internal view returns (address) {
+        if(isRoleApprovedForAll(_tokenAddress, _grantee, msg.sender)){
             return _grantee;
-        } else if (isRoleApprovedForAll(_tokenAddress, _revoker, msg.sender)) {
+        } else if(isRoleApprovedForAll(_tokenAddress, _revoker, msg.sender)){
             return _revoker;
         } else {
             revert("ERC7432: sender must be approved");
         }
     }
 
-    function _revokeRole(RoleAssignment calldata _roleAssignment, address _caller) internal {
-        bool _isRevocable = roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][
-            _roleAssignment.tokenAddress
-        ][_roleAssignment.tokenId][_roleAssignment.role].revocable;
-        require(
-            _isRevocable || _caller == _roleAssignment.grantee,
-            "ERC7432: Role is not revocable or caller is not the grantee"
-        );
-        delete roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][_roleAssignment.tokenAddress][
-            _roleAssignment.tokenId
-        ][_roleAssignment.role];
-        delete latestGrantees[_roleAssignment.grantor][_roleAssignment.tokenAddress][_roleAssignment.tokenId][
-            _roleAssignment.role
-        ];
-        emit RoleRevoked(_roleAssignment);
+    function _revokeRole(
+        bytes32 _role,
+        address _tokenAddress,
+        uint256 _tokenId,
+        address _revoker,
+        address _grantee,
+        address _caller
+    ) internal {
+        bool _isRevocable = roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role].revocable;
+        require(_isRevocable || _caller == _grantee, "ERC7432: Role is not revocable or caller is not the grantee");
+        delete roleAssignments[_revoker][_grantee][_tokenAddress][_tokenId][_role];
+        delete latestGrantees[_revoker][_tokenAddress][_tokenId][_role];
+        emit RoleRevoked(_role, _tokenAddress, _tokenId, _revoker, _grantee);
     }
 
-    function hasRole(RoleAssignment calldata _roleAssignment) external view returns (bool) {
-        return
-            roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][_roleAssignment.tokenAddress][
-                _roleAssignment.tokenId
-            ][_roleAssignment.role].expirationDate > block.timestamp;
+    function hasRole(
+        bytes32 _role,
+        address _tokenAddress,
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
+    ) external view returns (bool) {
+        return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate > block.timestamp;
     }
 
-    function hasUniqueRole(RoleAssignment calldata _roleAssignment) external view returns (bool) {
-        return
-            latestGrantees[_roleAssignment.grantor][_roleAssignment.tokenAddress][_roleAssignment.tokenId][
-                _roleAssignment.role
-            ] ==
-            _roleAssignment.grantee &&
-            roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][_roleAssignment.tokenAddress][
-                _roleAssignment.tokenId
-            ][_roleAssignment.role].expirationDate >
-            block.timestamp;
+    function hasUniqueRole(
+        bytes32 _role,
+        address _tokenAddress,
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
+    ) external view returns (bool) {
+        return latestGrantees[_grantor][_tokenAddress][_tokenId][_role] == _grantee && roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate > block.timestamp;
     }
 
-    function roleData(RoleAssignment calldata _roleAssignment) external view returns (bytes memory data_) {
-        RoleData memory _roleData = roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][
-            _roleAssignment.tokenAddress
-        ][_roleAssignment.tokenId][_roleAssignment.role];
+    function roleData(
+        bytes32 _role,
+        address _tokenAddress,
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
+    ) external view returns (bytes memory data_) {
+        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
         return (_roleData.data);
     }
 
     function roleExpirationDate(
-        RoleAssignment calldata _roleAssignment
+        bytes32 _role,
+        address _tokenAddress,
+        uint256 _tokenId,
+        address _grantor,
+        address _grantee
     ) external view returns (uint64 expirationDate_) {
-        RoleData memory _roleData = roleAssignments[_roleAssignment.grantor][_roleAssignment.grantee][
-            _roleAssignment.tokenAddress
-        ][_roleAssignment.tokenId][_roleAssignment.role];
+        RoleData memory _roleData = roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
         return (_roleData.expirationDate);
     }
 
@@ -139,7 +135,11 @@ contract ERC7432 is IERC7432 {
         return interfaceId == type(IERC7432).interfaceId;
     }
 
-    function setRoleApprovalForAll(address _tokenAddress, address _operator, bool _isApproved) external override {
+    function setRoleApprovalForAll(
+        address _tokenAddress,
+        address _operator,
+        bool _isApproved
+    ) external override {
         tokenApprovals[msg.sender][_tokenAddress][_operator] = _isApproved;
         emit RoleApprovalForAll(_tokenAddress, _operator, _isApproved);
     }
