@@ -6,7 +6,7 @@ import {ERC7432InterfaceId} from './contants'
 import nock from 'nock'
 import axios from 'axios'
 import {defaultAbiCoder, solidityKeccak256} from 'ethers/lib/utils'
-import {NftMetadata, Role, RoleAssignment} from './types'
+import {NftMetadata, RoleAssignment} from './types'
 
 const {HashZero, AddressZero} = ethers.constants
 const ONE_DAY = 60 * 60 * 24
