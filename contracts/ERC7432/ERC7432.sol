@@ -116,7 +116,6 @@ contract ERC7432 is IERC7432 {
         return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role];
     }
 
-
     function roleExpirationDate(
         bytes32 _role,
         address _tokenAddress,
