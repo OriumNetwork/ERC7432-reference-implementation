@@ -1,1 +1,1 @@
-export const ERC7432InterfaceId = '0x17ef8677'
+export const ERC7432InterfaceId = '0x04984ac8'
