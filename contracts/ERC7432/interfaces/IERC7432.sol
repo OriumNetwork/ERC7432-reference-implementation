@@ -112,7 +112,7 @@ interface IERC7432 is IERC165 {
     /// @param _tokenId The token identifier.
     /// @param _grantor The user that assigned the role.
     /// @param _grantee The user that received the role.
-    function hasRole(
+    function hasNonUniqueRole(
         bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,
@@ -126,7 +126,7 @@ interface IERC7432 is IERC165 {
     /// @param _tokenId The token identifier.
     /// @param _grantor The user that assigned the role.
     /// @param _grantee The user that received the role.
-    function hasUniqueRole(
+    function hasRole(
         bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,

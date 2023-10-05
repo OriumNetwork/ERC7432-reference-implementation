@@ -86,7 +86,7 @@ contract ERC7432 is IERC7432 {
         emit RoleRevoked(_role, _tokenAddress, _tokenId, _revoker, _grantee);
     }
 
-    function hasRole(
+    function hasNonUniqueRole(
         bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,
@@ -96,7 +96,7 @@ contract ERC7432 is IERC7432 {
         return roleAssignments[_grantor][_grantee][_tokenAddress][_tokenId][_role].expirationDate > block.timestamp;
     }
 
-    function hasUniqueRole(
+    function hasRole(
         bytes32 _role,
         address _tokenAddress,
         uint256 _tokenId,
