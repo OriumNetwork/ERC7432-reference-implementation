@@ -16,3 +16,13 @@ export interface Input {
   type: string
   components?: Input[]
 }
+
+export interface RoleAssignment {
+  role: string
+  tokenAddress: string
+  tokenId: number
+  grantor: string
+  grantee: string
+  expirationDate: number
+  data: string
+}
